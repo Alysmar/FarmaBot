@@ -1,0 +1,131 @@
+/*-----------------------------------Clases-------------------------------*/
+      /*Body*/
+      body {
+        background-color: #222;
+        color: #eee;
+        font-family: sans-serif;
+        margin: 0;
+      }
+
+      /*Contenedor principal*/
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /*Sidebar*/
+      .sidebar {
+        background-color: #111;
+        width: 200px;
+        padding: 20px;
+      }
+
+      /*Sidebar - h1*/
+      .sidebar h1 {
+        margin-bottom: 20px;
+      }
+
+      /*Sidebar - botones*/
+      .sidebar button {
+        background-color: #333;
+        color: #eee;
+        border: none;
+        padding: 10px 20px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      /*Contenedor de chat*/
+      .content {
+        flex-grow: 1;
+        padding: 20px 0px 20px 20px;
+        margin: 0 auto;
+      }
+
+      /*Entrada de datos*/
+      .input-area {
+        display: flex;
+        align-items: center;
+      }
+
+      /*Entrada de datos - input*/
+      .input-area input {
+        background-color: #444;
+        color: #eee;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        flex-grow: 1;
+        margin-right: 10px;
+      }
+
+      /*Entrada de datos - botones*/
+      .input-area button {
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        margin: 5px 20px 5px 5px;
+      }
+
+      /*Caja de mensaje del usuario*/
+      .user-message {
+        background-color: #525252;
+        border-radius: 10px;
+        padding: 20px 20px 30px 20px;
+        margin-bottom: 20px;
+        margin: 16px 20px 20px 0px;
+      }
+
+      /*Caja de mensaje del bot*/
+      .bot-message {
+        background-color: #333;
+        border-radius: 10px;
+        padding: 20px 20px 30px 20px;
+        margin-bottom: 20px;
+        margin: 16px 20px 20px 0px;
+      }
+
+      /*Nombre del remitente*/
+      .user-message strong,
+      .bot-message strong {
+        font-weight: bold;
+        display: block;
+        font-size: 1.5em;
+        margin-inline-start: 0px;
+        margin-inline-end: 0px;
+        unicode-bidi: isolate;
+      }
+      /*-----------------------------------------------------------------------*/
+
+      /*----------------------------------ids----------------------------------*/
+      /*Caja de chat*/
+      #chat-output {
+        height: 550px;
+        overflow-y: scroll;
+        padding: -10px;
+      }
+
+      /*Caja de entrada de datos*/
+      #chat-input {
+        display: flex;
+        margin: 6px 5px 0px 0px;
+      }
+
+      /*Caja de entrada de datos*/
+      #user-input {
+        flex-grow: 1;
+        padding: 20px;
+        font-size: 16px;
+      }
+
+      /*Boton enviar*/
+      #send-button {
+        padding: 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }

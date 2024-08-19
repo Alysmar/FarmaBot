@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="css/farmabot.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <h1>Farmabot</h1>
+        <button>+ Nuevo chat</button>
+        <h2>Recientes</h2>
+        <button></button>
+        <button></button>
+        <button></button>
+        <button>Iniciar sesión</button>
+      </div>
+      <div class="content">
+        <div id="chat-container">
+          <div id="chat-output"></div>
+          <div id="chat-input" class="input-area">
+            <input
+              type="text"
+              id="user-input"
+              placeholder="Escribe aquí tu requerimiento..."
+            />
+            <button id="send-button">Enviar</button>
+          </div>
+        </div>
+
+        <script type="importmap">
+          {
+            "imports": {
+              "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+          }
+        </script>
+
+        <script type="module">
+          import { GoogleGenerativeAI } from "@google/generative-ai";
+
+          // Reemplaza 'YOUR_API_KEY' con tu clave de API real
+          const API_KEY = "";
+          const genAI = new GoogleGenerativeAI(API_KEY);
+
+          const chatOutput = document.getElementById("chat-output");
+          const userInput = document.getElementById("user-input");
+          const sendButton = document.getElementById("send-button");
+
+          sendButton.addEventListener("click", async () => {
+            const userMessage = userInput.value;
+            userInput.value = "";
+
+            displayMessage("Usted", userMessage, "user-message");
+
+            const model = genAI.getGenerativeModel({
+              model: "gemini-1.5-pro-latest",
+            });
+            const prompt = userMessage;
+
+            try {
+              const result = await model.generateContent(prompt);
+              const response = await result.response;
+              displayMessage("Farmabot", response.text(), "bot-message");
+            } catch (error) {
+              console.error("Error al generar contenido:", error);
+              displayMessage(
+                "Farmabot",
+                "Error al procesar tu solicitud.",
+                "bot-message"
+              );
+            }
+          });
+
+          function displayMessage(sender, message, messageClass) {
+            const messageElement = document.createElement("p");
+            messageElement.innerHTML = `<strong>${sender}</strong><br>${message}`;
+            messageElement.classList.add(messageClass);
+            chatOutput.appendChild(messageElement);
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+          }
+        </script>
+
+        <!--<script src="js/farmabot.js"></script>-->
+      </div>
+    </div>
+  </body>
+</html>
