@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for
+
 from psycopg2 import connect, extras
 from cryptography.fernet import Fernet, InvalidToken
 import os
@@ -120,6 +121,10 @@ def create_user():
         cur.close()
         conn.close()
 
+
+@app.route('/farmabot') # Nueva ruta para acceder a la plantilla
+def farmabot():
+    return render_template('FarmaBot/ChatBot/farmabot.html')
 
 @app.route('/')
 def home():

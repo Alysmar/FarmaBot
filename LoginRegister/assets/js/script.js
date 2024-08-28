@@ -92,7 +92,7 @@ function iniciarSesion() {
         // Inicio de sesión exitoso
         alert(data.message);
         // Redirigir a la página FarmaBot/ChatBot/farmabot.html
-        window.location.href = "../ChatBot/farmabot.html"; 
+        window.location.href = '/farmabot';  
     })
     .catch(error => {
         console.error('Error:', error);
