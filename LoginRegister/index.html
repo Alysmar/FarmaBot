@@ -31,19 +31,19 @@
             <!--Formulario de login y registro-->
             <div class="contenedor__login-register">
                 <!--LOGIN-->
-                <form action="" class="formulario__login">
+                <form id="loginForm" class="formulario__login">
                     <h2>Iniciar Sesión</h2>
-                    <input type="text" placeholder="Correo Electrónico">
-                    <input type="password" placeholder="Contraseña">
-                    <button>Entrar</button>
+                    <input type="text" placeholder="Correo Electrónico" name="correo" id="correo_login">
+                    <input type="password" placeholder="Contraseña" name="contrasena" id="contrasena_login">
+                    <button type="button" onclick="iniciarSesion()">Entrar</button>
                 </form>
                 <!--REGISTRO-->
                 <form id="registroForm" class="formulario__register">
                     <h2>Registrarse</h2>
                     <input type="text" placeholder="Nombre Completo" name="nombre_completo" id="nombre_completo">
-                    <input type="text" placeholder="Correo Electrónico" name="correo" id="correo">
+                    <input type="text" placeholder="Correo Electrónico" name="correo" id="correo_registro">
                     <input type="text" placeholder="Usuario" name="usuario" id="usuario">
-                    <input type="password" placeholder="Contraseña" name="contrasena" id="contrasena">
+                    <input type="password" placeholder="Contraseña" name="contrasena" id="contrasena_registro">
                     <button type="button" onclick="registrarUsuario()">Registrarse</button>
                 </form>
             </div>
