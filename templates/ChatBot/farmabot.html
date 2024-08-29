@@ -128,9 +128,9 @@
           function updateChatList() {
             chatList.innerHTML = ''; // Limpia la lista de chats
             chats.forEach(chat => {
-  // Crear un contenedor para el chat-item y el delete-button
-  const chatContainer = document.createElement("div");
-    chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
+              // Crear un contenedor para el chat-item y el delete-button
+              const chatContainer = document.createElement("div");
+              chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
 
               const chatItem = document.createElement("button"); // Crea un elemento de lista para cada chat
               chatItem.classList.add("chat-item"); // Agregar una clase para estilos
@@ -147,7 +147,7 @@
               });
 
                // Agregar el chat-item al contenedor
-    chatContainer.appendChild(chatItem);
+              chatContainer.appendChild(chatItem);
       
               // Agregar botón de eliminar
               const deleteButton = document.createElement("button");
@@ -155,10 +155,10 @@
               deleteButton.innerHTML = "delete"; // Establece el texto del botón
 
                // Agregar el delete-button al contenedor
-    chatContainer.appendChild(deleteButton);
+              chatContainer.appendChild(deleteButton);
 
-// Agregar el contenedor a la lista de chats
-chatList.appendChild(chatContainer);
+              // Agregar el contenedor a la lista de chats
+              chatList.appendChild(chatContainer);
             });
           }
       
