@@ -65,8 +65,16 @@ body {
   display: flex;
 }
 
+.chat-container .chat-item{
+  margin: 0px 10px 0px 0px;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
 .chat-container .material-symbols-outlined {
   margin-left: auto;
+  justify-content: center;
+  align-items: center;
 }
 
 /*Boton de cerrar sesion*/
