@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmaBot</title>
+    <!--Vinculando con Google Fonts Icons-->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <!-- Vinculando con la hoja de estilos CSS -->
+    <link rel="stylesheet" type="text/css" href="css/farmabot.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <!--Barra lateral-->
+      <div class="sidebar">
+        <h1>Farmabot</h1>
+        <!-- Botón para iniciar un nuevo chat -->
+        <div class="new-chat-btn">
+          <button class="new-chat">
+            <span class="material-symbols-outlined">add</span>
+            <text>Nuevo chat</text>
+          </button>
+        </div>
+        <h2>Recientes</h2>
+        <!-- Lista de chats recientes -->
+        <div class="action-buttons">
+          <ul id="chat-list"></ul>
+        </div>
+        <!-- Botón para cerrar sesión -->
+        <div class="logout-btn">
+          <button>Cerrar sesión</button>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="content">
+        <!--Área de lectura del chat-->
+        <div id="chat-output">
+          <header class="header">
+            <!--Saludo-->
+            <!--<h2 class="title">Hola</h2>-->
+            <!--<h4 class="subtitle">¿En que puedo ayudarte hoy?</h4>-->
+          </header>
+
+          <!--Indicador de carga-->
+           <div class="loading-indicator">
+              <div class="loading-animation-1"></div>
+              <div class="loading-animation-2"></div>
+              <div class="loading-animation-3"></div>
+           </div>
+        </div>
+        
+        <!--Area de escritura-->
+        <div id="chat-input" class="typing-area">
+          <form action="#" class="typing-form">
+            <div class="input-area">
+              <input
+                type="text"
+                id="user-input"
+                placeholder="Escribe aquí tu requerimiento..."
+                class="typing-input"
+              />
+              <button id="send-button">Enviar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+        <script type="importmap">
+        {
+          "imports": {
+            "@google/generative-ai": "https://esm.run/@google/generative-ai"
+          }
+        }
+      </script>
+
+      <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai"; // Importa la clase GoogleGenerativeAI
+      
+        document.addEventListener("DOMContentLoaded", () => { // Espera a que el DOM esté completamente cargado
+      
+          // Obtener referencias a elementos del DOM
+          const newChatButton = document.querySelector(".new-chat-btn button"); // Botón para nuevo chat
+          const chatList = document.getElementById("chat-list"); // Lista de chats recientes
+          const chatContainer = document.querySelector(".content"); // Contenedor principal del chat
+          const chatOutput = document.getElementById("chat-output"); // Área donde se muestran los mensajes
+          const userInput = document.getElementById("user-input"); // Campo de entrada del usuario
+          const sendButton = document.getElementById("send-button"); // Botón para enviar mensaje
+      
+          const loadingIndicator = document.querySelector(".loading-indicator"); // Indicador de carga
+      
+          // Array para almacenar los objetos de chat
+          let chats = [];
+          let currentChatIndex = 0; // Índice del chat actual
+      
+          // Función para crear un nuevo chat
+          function createChat() {
+            const newChat = {
+              id: chats.length + 1, // ID del chat
+              messages: [], // Array para almacenar los mensajes del chat
+              element: document.createElement("div") // Elemento del DOM para el chat
+            };
+            newChat.element.classList.add("chat"); // Agrega la clase "chat" al elemento
+            //chatContainer.appendChild(newChat.element); // Agrega el elemento al contenedor de chats
+            chats.push(newChat); // Agrega el nuevo chat al array de chats
+      
+            // Agregar el saludo inicial
+            displayMessage("Farmabot", "Hola! ¿En qué puedo ayudarte?", "bot-message");
+            newChat.messages.push({ sender: "Farmabot", text: "Hola! ¿En qué puedo ayudarte?", class: "bot-message" });
+      
+            // Actualizar la lista de chats recientes
+            updateChatList();
+      
+            // Hacer este nuevo chat el activo
+            setActiveChat(newChat);
+          }
+      
+          // Función para actualizar la lista de chats recientes
+          function updateChatList() {
+            chatList.innerHTML = ''; // Limpia la lista de chats
+            chats.forEach(chat => {
+  // Crear un contenedor para el chat-item y el delete-button
+  const chatContainer = document.createElement("div");
+    chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
+
+              const chatItem = document.createElement("button"); // Crea un elemento de lista para cada chat
+              chatItem.classList.add("chat-item"); // Agregar una clase para estilos
+              //chatItem.textContent = `Chat ${chat.id}`; // Establece el texto del elemento de lista
+
+              // Obtener el primer mensaje del usuario
+              const firstUserMessage = chat.messages.find(message => message.sender === "Usted");
+
+              // Establecer el texto del botón con el primer mensaje del usuario o un valor predeterminado
+              chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Chat actual";
+
+              chatItem.addEventListener('click', () => { // Agrega un event listener para cuando se hace clic en el elemento de lista
+                setActiveChat(chat); // Establece el chat como activo
+              });
+
+               // Agregar el chat-item al contenedor
+    chatContainer.appendChild(chatItem);
+      
+              // Agregar botón de eliminar
+              const deleteButton = document.createElement("button");
+              deleteButton.classList.add("material-symbols-outlined", "delete-button"); // Agrega clases al botón
+              deleteButton.innerHTML = "delete"; // Establece el texto del botón
+
+               // Agregar el delete-button al contenedor
+    chatContainer.appendChild(deleteButton);
+
+// Agregar el contenedor a la lista de chats
+chatList.appendChild(chatContainer);
+            });
+          }
+      
+          // Función para establecer un chat como activo
+          function setActiveChat(chat) {
+            // Limpiar el contenido del chat actual
+            chatOutput.innerHTML = '';
+            currentChatIndex = chats.indexOf(chat); // Actualiza el índice del chat actual
+      
+            // Mostrar los mensajes del chat seleccionado
+            chat.messages.forEach(message => {
+              displayMessage(message.sender, message.text, message.class);
+            });
+          }
+      
+          // Inicializar la API de Google Generative AI
+          const API_KEY = ""; // Reemplaza con tu clave de API
+          const genAI = new GoogleGenerativeAI(API_KEY);
+      
+          // Event listener para el botón "Enviar"
+          sendButton.addEventListener("click", async () => {
+            // Obtener el mensaje del usuario
+            const userMessage = userInput.value;
+            userInput.value = ""; // Limpiar el campo de entrada
+      
+            // Mostrar el mensaje del usuario en el chat
+            displayMessage("Usted", userMessage, "user-message");
+            chats[currentChatIndex].messages.push({ sender: "Usted", text: userMessage, class: "user-message" });
+      
+            // Obtener el modelo de lenguaje
+            const model = genAI.getGenerativeModel({
+              model: "gemini-1.5-pro-latest",
+            });
+            const prompt = userMessage;
+      
+            try {
+              // Mostrar la animación de carga
+              loadingIndicator.style.display = "block";
+      
+              // Generar la respuesta del chatbot
+              const result = await model.generateContent(prompt);
+              const response = await result.response;
+      
+              // Ocultar la animación de carga
+              loadingIndicator.style.display = "none";
+      
+              // Mostrar la respuesta del chatbot en el chat
+              displayMessage("Farmabot", response.text(), "bot-message");
+              chats[currentChatIndex].messages.push({ sender: "Farmabot", text: response.text(), class: "bot-message" });
+            } catch (error) {
+              // Manejar errores
+              console.error("Error al generar contenido:", error);
+              displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
+            }
+          });
+      
+          // Event listener para el botón "Nuevo Chat"
+          newChatButton.addEventListener("click", createChat);
+      
+          // Función para mostrar un mensaje en el chat
+          function displayMessage(sender, message, messageClass) {
+            const messageElement = document.createElement("p");
+            messageElement.innerHTML = `<strong>${sender}</strong><br>${message}`;
+            messageElement.classList.add(messageClass);
+            chatOutput.appendChild(messageElement);
+            chatOutput.scrollTop = chatOutput.scrollHeight; // Desplazarse al final del chat
+          }
+      
+          // Función para eliminar un chat
+          function removeChat(chatIndex) {
+            chatList.children[chatIndex].remove(); // Eliminar de la lista de chats
+            //chatContainer.children[chatIndex].remove();
+            chats.splice(chatIndex, 1);
+      
+            // 1. Si hay un solo chat y se borra, simular el comportamiento de inicio
+            if (chats.length === 0) {
+            chats = []; // Reiniciar el array de chats
+            currentChatIndex = 0; // Reiniciar el índice del chat actual
+            createChat(); // Crear un nuevo chat
+            return; // Salir de la función después de crear un nuevo chat
+            }
+
+            // 2. Si hay más de un chat y se borra el primero, mostrar el siguiente
+            if (chatIndex === 0) {
+              currentChatIndex = 0;
+            } 
+            // 3. Si hay más de un chat y se borra el último, mostrar el anterior
+            else if (chatIndex === chats.length) {
+              currentChatIndex = chats.length - 1;
+            } 
+            // 4. Si hay más de un chat y se borra uno intermedio, ajustar los índices
+            else if (currentChatIndex > chatIndex) {
+              currentChatIndex--;
+            }
+
+            // Mostrar el chat actual
+            setActiveChat(chats[currentChatIndex]);
+          }
+      
+          // Event listener para los botones de eliminar
+          document.addEventListener("click", (event) => {
+            if (event.target.classList.contains("delete-button")) {
+              const chatIndex = Array.from(chatList.children).indexOf(event.target.parentNode);
+              removeChat(chatIndex);
+            }
+          });
+      
+          // Crear el chat inicial al cargar la página
+          createChat();
+        });
+      </script>
+
+        <!--<script src="js/farmabot.js"></script>-->
+      </div>
+    </div>
+  </body>
+</html>
