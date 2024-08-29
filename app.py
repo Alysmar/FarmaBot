@@ -122,13 +122,13 @@ def create_user():
         conn.close()
 
 
-@app.route('/farmabot') # Nueva ruta para acceder a la plantilla
+@app.route('/farmabot')
 def farmabot():
-    return render_template('FarmaBot/ChatBot/farmabot.html')
+    return render_template('ChatBot/farmabot.html')  # Ruta relativa a la carpeta 'templates'
 
 @app.route('/')
 def home():
-    return send_file('index.html')
+    return send_file('index_login_register.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

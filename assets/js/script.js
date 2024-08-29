@@ -91,8 +91,7 @@ function iniciarSesion() {
     .then(data => {
         // Inicio de sesión exitoso
         alert(data.message);
-        // Redirigir a la página FarmaBot/ChatBot/farmabot.html
-        window.location.href = '/farmabot';  
+        window.location.href = '/farmabot'; // Usando la ruta definida en Flask 
     })
     .catch(error => {
         console.error('Error:', error);

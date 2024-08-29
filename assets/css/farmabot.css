@@ -1,0 +1,284 @@
+/*Importando Google Fonts - Poppins*/
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+
+/*Clases*/
+/*Body*/
+body {
+  background-color: #222;
+  color: #eee;
+  font-family: sans-serif;
+  margin: 0;
+}
+
+/*Contenedor principal*/
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/*Sidebar*/
+.sidebar {
+  background-color: #111;
+  width: 200px;
+  padding: 20px;
+  flex-direction: column;
+  display: flex;
+}
+
+/*Sidebar - h1*/
+.sidebar h1 {
+  margin-bottom: 20px;
+}
+
+/*Sidebar - botones*/
+.sidebar button {
+  display: flex;
+  background-color: #333;
+  color: #eee;
+  border: none;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.sidebar button:hover {
+  background: #4caf50;
+}
+
+.action-buttons {
+  height: 100vh;
+}
+
+/*Icono de nuevo chat*/
+.new-chat-btn .material-symbols-outlined {
+  margin: 0px 10px 0px 0px;
+}
+
+/*Texto de nuevo chat*/
+.new-chat text {
+  margin: 4px 34px 0px 0px;
+}
+
+.chat-container {
+  display: flex;
+}
+
+.chat-container .material-symbols-outlined {
+  margin-left: auto;
+}
+
+/*Boton de cerrar sesion*/
+.logout-btn {
+  flex: 1;
+  margin-bottom: 0px;
+}
+
+.logout-btn button {
+  margin-bottom: 0px;
+}
+
+.header {
+  margin-top: 7vh;
+  padding: 1rem;
+}
+
+.header .title {
+  font-size: 2.1rem;
+  width: fit-content;
+}
+
+.header .subtitle {
+  font-size: 1.8rem;
+}
+
+/*Contenedor de chat*/
+.content {
+  flex-grow: 1;
+  padding: 20px 0px 20px 20px;
+  margin: 0 auto;
+  flex-direction: column;
+  display: flex;
+}
+
+/*Entrada de datos*/
+.input-area {
+  display: flex;
+  align-items: center;
+}
+
+.typing-area {
+  flex: 1;
+}
+
+/*Entrada de datos - input*/
+.input-area input {
+  background-color: #444;
+  color: #eee;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+/*Entrada de datos - botones*/
+.input-area button {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin: 5px 20px 5px 5px;
+}
+
+/*Caja de mensaje del usuario*/
+.user-message {
+  background-color: #525252;
+  border-radius: 10px;
+  padding: 20px 20px 30px 20px;
+  margin-bottom: 20px;
+  margin: 16px 20px 20px 0px;
+}
+
+/*Caja de mensaje del bot*/
+.bot-message {
+  background-color: #333;
+  border-radius: 10px;
+  padding: 20px 20px 30px 20px;
+  margin-bottom: 20px;
+  margin: 16px 20px 20px 0px;
+}
+
+/*Nombre del remitente*/
+.user-message strong,
+.bot-message strong {
+  font-weight: bold;
+  display: block;
+  font-size: 1.5em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  unicode-bidi: isolate;
+}
+
+.loading-indicator {
+  display: flex;
+  width: 100%;
+  gap: 0.8rem;
+}
+
+.loading-indicator .loading-animation-1,
+.loading-animation-2,
+.loading-animation-3 {
+  height: 10px;
+  width: 10px;
+  background: white;
+  border-radius: 50%;
+}
+
+.loading-indicator .loading-animation-1 {
+  animation: animate1 4s step-start infinite;
+}
+
+.loading-indicator .loading-animation-2 {
+  animation: animate2 4s step-start infinite;
+}
+
+.loading-indicator .loading-animation-3 {
+  animation: animate3 4s step-start infinite;
+}
+
+@keyframes animate1 {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes animate2 {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes animate3 {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/*ids*/
+
+#chat-list{
+  padding: 0;
+  margin: 0;
+}
+
+#chat-list button{
+  margin-bottom: 15px;
+}
+
+/*Caja de chat*/
+#chat-output {
+  overflow-y: scroll;
+  padding: -10px;
+  height: 100vh;
+}
+
+/*Caja de entrada de datos*/
+#chat-input {
+  margin: 6px 5px 0px 0px;
+}
+
+/*Caja de entrada de datos*/
+#user-input {
+  font-size: 16px;
+}
+
+/*Boton enviar*/
+#send-button {
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#send-button:hover {
+  background: #0b490d;
+}
