@@ -110,7 +110,7 @@
               element: document.createElement("div") // Elemento del DOM para el chat
             };
             newChat.element.classList.add("chat"); // Agrega la clase "chat" al elemento
-            chatContainer.appendChild(newChat.element); // Agrega el elemento al contenedor de chats
+            //chatContainer.appendChild(newChat.element); // Agrega el elemento al contenedor de chats
             chats.push(newChat); // Agrega el nuevo chat al array de chats
       
             // Agregar el saludo inicial
@@ -128,6 +128,10 @@
           function updateChatList() {
             chatList.innerHTML = ''; // Limpia la lista de chats
             chats.forEach(chat => {
+  // Crear un contenedor para el chat-item y el delete-button
+  const chatContainer = document.createElement("div");
+    chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
+
               const chatItem = document.createElement("button"); // Crea un elemento de lista para cada chat
               chatItem.classList.add("chat-item"); // Agregar una clase para estilos
               //chatItem.textContent = `Chat ${chat.id}`; // Establece el texto del elemento de lista
@@ -141,14 +145,20 @@
               chatItem.addEventListener('click', () => { // Agrega un event listener para cuando se hace clic en el elemento de lista
                 setActiveChat(chat); // Establece el chat como activo
               });
+
+               // Agregar el chat-item al contenedor
+    chatContainer.appendChild(chatItem);
       
               // Agregar botón de eliminar
               const deleteButton = document.createElement("button");
               deleteButton.classList.add("material-symbols-outlined", "delete-button"); // Agrega clases al botón
               deleteButton.innerHTML = "delete"; // Establece el texto del botón
-              chatItem.appendChild(deleteButton); // Agrega el botón al elemento de lista
-      
-              chatList.appendChild(chatItem); // Agrega el elemento de lista a la lista de chats
+
+               // Agregar el delete-button al contenedor
+    chatContainer.appendChild(deleteButton);
+
+// Agregar el contenedor a la lista de chats
+chatList.appendChild(chatContainer);
             });
           }
       
@@ -220,7 +230,7 @@
           // Función para eliminar un chat
           function removeChat(chatIndex) {
             chatList.children[chatIndex].remove(); // Eliminar de la lista de chats
-            chatContainer.children[chatIndex].remove();
+            //chatContainer.children[chatIndex].remove();
             chats.splice(chatIndex, 1);
       
             // 1. Si hay un solo chat y se borra, simular el comportamiento de inicio

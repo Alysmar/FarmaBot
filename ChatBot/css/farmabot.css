@@ -61,6 +61,14 @@ body {
   margin: 4px 34px 0px 0px;
 }
 
+.chat-container {
+  display: flex;
+}
+
+.chat-container .material-symbols-outlined {
+  margin-left: auto;
+}
+
 /*Boton de cerrar sesion*/
 .logout-btn {
   flex: 1;
@@ -234,6 +242,16 @@ body {
 }
 
 /*ids*/
+
+#chat-list{
+  padding: 0;
+  margin: 0;
+}
+
+#chat-list button{
+  margin-bottom: 15px;
+}
+
 /*Caja de chat*/
 #chat-output {
   overflow-y: scroll;
