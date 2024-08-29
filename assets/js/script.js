@@ -90,13 +90,6 @@ function iniciarSesion() {
       }
       return response.json();
     })
-    .then((data) => {
-      // Inicio de sesión exitoso
-      alert(data.message);
-      // Redirigir a la página FarmaBot/ChatBot/farmabot.html
-      window.location.href = "/farmabot";
-    })
-<<<<<<< HEAD:assets/js/script.js
     .then(data => {
         // Inicio de sesión exitoso
         alert(data.message);
@@ -106,12 +99,6 @@ function iniciarSesion() {
         console.error('Error:', error);
         // Mostrar el mensaje de error capturado
         alert(error.message); 
-=======
-    .catch((error) => {
-      console.error("Error:", error);
-      // Mostrar el mensaje de error capturado
-      alert(error.message);
->>>>>>> f0e96750d31c484d31827805c51f10c026c566c3:LoginRegister/assets/js/script.js
     });
 }
 
