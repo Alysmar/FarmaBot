@@ -101,9 +101,20 @@
           // Array para almacenar los objetos de chat
           let chats = [];
           let currentChatIndex = 0; // Índice del chat actual
+
+          // Variable para controlar si el bot está pensando
+          let botIsThinking = false;
       
           // Función para crear un nuevo chat
           function createChat() {
+            if (chats.length >= 5) {
+              alert("Ya tienes el máximo de 5 chats activos. Por favor, cierra uno antes de crear otro.");
+              return; // Salir de la función si ya hay 5 chats
+            }
+            if (botIsThinking) {
+              alert("Espera a que el bot termine de responder antes de crear un nuevo chat.");
+              return;
+            }
             const newChat = {
               id: chats.length + 1, // ID del chat
               messages: [], // Array para almacenar los mensajes del chat
@@ -140,9 +151,13 @@
               const firstUserMessage = chat.messages.find(message => message.sender === "Usted");
 
               // Establecer el texto del botón con el primer mensaje del usuario o un valor predeterminado
-              chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Chat actual";
+              chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Nuevo Chat";
 
               chatItem.addEventListener('click', () => { // Agrega un event listener para cuando se hace clic en el elemento de lista
+                if (botIsThinking) {
+                  alert("Espera a que el bot termine de responder antes de cambiar de chat.");
+                  return;
+                }
                 setActiveChat(chat); // Establece el chat como activo
               });
 
@@ -175,7 +190,7 @@
           }
       
           // Inicializar la API de Google Generative AI
-          const API_KEY = ""; // Reemplaza con tu clave de API
+          const API_KEY = "AIzaSyCPvJQl9CULnkJuX5PbymEOgcUNzBxPUTk"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
       
           // Event listener para el botón "Enviar"
@@ -187,6 +202,9 @@
             // Mostrar el mensaje del usuario en el chat
             displayMessage("Usted", userMessage, "user-message");
             chats[currentChatIndex].messages.push({ sender: "Usted", text: userMessage, class: "user-message" });
+
+            // Actualizar la lista de chats después de enviar un mensaje
+            updateChatList();
       
             // Obtener el modelo de lenguaje
             const model = genAI.getGenerativeModel({
@@ -197,7 +215,12 @@
             try {
               // Mostrar la animación de carga
               loadingIndicator.style.display = "block";
-      
+
+               // Deshabilitar el botón "Nuevo Chat" y los botones de cambio de chat
+              newChatButton.disabled = true;
+              botIsThinking = true;
+              disableChatItems(); // Nueva función para deshabilitar los botones de cambio de chat
+
               // Generar la respuesta del chatbot
               const result = await model.generateContent(prompt);
               const response = await result.response;
@@ -208,15 +231,39 @@
               // Mostrar la respuesta del chatbot en el chat
               displayMessage("Farmabot", response.text(), "bot-message");
               chats[currentChatIndex].messages.push({ sender: "Farmabot", text: response.text(), class: "bot-message" });
+
+              // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems(); // Nueva función para habilitar los botones de cambio de chat
             } catch (error) {
               // Manejar errores
               console.error("Error al generar contenido:", error);
               displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
+               // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat si hay un error
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems();
             }
           });
       
           // Event listener para el botón "Nuevo Chat"
           newChatButton.addEventListener("click", createChat);
+
+          // Nuevas funciones para deshabilitar y habilitar los botones de cambio de chat
+          function disableChatItems() {
+            const chatItems = document.querySelectorAll(".chat-item");
+            chatItems.forEach(item => {
+              item.disabled = true;
+            });
+          }
+
+          function enableChatItems() {
+            const chatItems = document.querySelectorAll(".chat-item");
+            chatItems.forEach(item => {
+              item.disabled = false;
+            });
+          }
       
           // Función para mostrar un mensaje en el chat
           function displayMessage(sender, message, messageClass) {
@@ -256,6 +303,7 @@
 
             // Mostrar el chat actual
             setActiveChat(chats[currentChatIndex]);
+            updateChatList(); // Actualizar la lista de chats después de eliminar un chat
           }
       
           // Event listener para los botones de eliminar
