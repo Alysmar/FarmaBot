@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        function checkSession() {
+            fetch('/api/check_session')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ingresa tus datos para iniciar sesión');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    window.location.href = 'farmabot'; // ruta de farmabot
+                })
+                .catch(error => {
+                    // Redirigir solo si la URL actual no es la raíz ('/')
+                    if (window.location.pathname !== '/') {
+                        //alert(error.message);
+                        window.location.href = '/';
+                    }
+                });
+        }
+
+        window.onload = checkSession;
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login y Registro - Farmabot</title>
