@@ -190,7 +190,7 @@
           }
       
           // Inicializar la API de Google Generative AI
-          const API_KEY = "AIzaSyCPvJQl9CULnkJuX5PbymEOgcUNzBxPUTk"; // Reemplaza con tu clave de API
+          const API_KEY = ""; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
       
           // Event listener para el botón "Enviar"
@@ -213,8 +213,8 @@
             const prompt = userMessage;
       
             try {
-              // Mostrar la animación de carga
-              loadingIndicator.style.display = "block";
+               // Mostrar un mensaje vacío con la clase loading-indicator
+              displayMessage("Farmabot", "", "bot-message");
 
                // Deshabilitar el botón "Nuevo Chat" y los botones de cambio de chat
               newChatButton.disabled = true;
@@ -225,12 +225,19 @@
               const result = await model.generateContent(prompt);
               const response = await result.response;
       
-              // Ocultar la animación de carga
-              loadingIndicator.style.display = "none";
+              // Esperar un pequeño retraso antes de intentar eliminar el mensaje de carga
+              setTimeout(() => {
+                // Eliminar el mensaje vacío con la clase loading-indicator
+                const loadingMessage = chatOutput.querySelector(".bot-message.loading-indicator");
+                if (loadingMessage) {
+                  chatOutput.removeChild(loadingMessage);
+                }
       
               // Mostrar la respuesta del chatbot en el chat
               displayMessage("Farmabot", response.text(), "bot-message");
               chats[currentChatIndex].messages.push({ sender: "Farmabot", text: response.text(), class: "bot-message" });
+
+              }, 100); // Retraso de 100 milisegundos
 
               // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat
               newChatButton.disabled = false;
@@ -270,6 +277,24 @@
             const messageElement = document.createElement("p");
             messageElement.innerHTML = `<strong>${sender}</strong><br>${message}`;
             messageElement.classList.add(messageClass);
+
+          // Agregar la clase loading-indicator si el remitente es el bot y el mensaje está vacío
+          if (sender === "Farmabot" && message === "") {
+              // Crear un elemento div para la animación
+              const loadingIndicator = document.createElement("div");
+              loadingIndicator.classList.add("loading-indicator");
+
+              // Crear los tres divs para la animación
+              for (let i = 1; i <= 3; i++) {
+                const animationDiv = document.createElement("div");
+                animationDiv.classList.add(`loading-animation-${i}`);
+                loadingIndicator.appendChild(animationDiv);
+              }
+
+              // Agregar el indicador de carga al mensaje
+              messageElement.appendChild(loadingIndicator);
+            }
+
             chatOutput.appendChild(messageElement);
             chatOutput.scrollTop = chatOutput.scrollHeight; // Desplazarse al final del chat
           }
