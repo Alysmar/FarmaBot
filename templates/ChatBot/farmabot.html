@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
     />
     <!-- Vinculando con la hoja de estilos CSS -->
-    <link rel="stylesheet" type="text/css" href="assets/css/farmabot.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/farmabot.css"/>
   </head>
 
   <body>
@@ -103,9 +103,20 @@
           // Array para almacenar los objetos de chat
           let chats = [];
           let currentChatIndex = 0; // Índice del chat actual
+
+          // Variable para controlar si el bot está pensando
+          let botIsThinking = false;
       
           // Función para crear un nuevo chat
           function createChat() {
+            if (chats.length >= 5) {
+              alert("Ya tienes el máximo de 5 chats activos. Por favor, cierra uno antes de crear otro.");
+              return; // Salir de la función si ya hay 5 chats
+            }
+            if (botIsThinking) {
+              alert("Espera a que el bot termine de responder antes de crear un nuevo chat.");
+              return;
+            }
             const newChat = {
               id: chats.length + 1, // ID del chat
               messages: [], // Array para almacenar los mensajes del chat
@@ -130,9 +141,9 @@
           function updateChatList() {
             chatList.innerHTML = ''; // Limpia la lista de chats
             chats.forEach(chat => {
-  // Crear un contenedor para el chat-item y el delete-button
-  const chatContainer = document.createElement("div");
-    chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
+              // Crear un contenedor para el chat-item y el delete-button
+              const chatContainer = document.createElement("div");
+              chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
 
               const chatItem = document.createElement("button"); // Crea un elemento de lista para cada chat
               chatItem.classList.add("chat-item"); // Agregar una clase para estilos
@@ -142,14 +153,18 @@
               const firstUserMessage = chat.messages.find(message => message.sender === "Usted");
 
               // Establecer el texto del botón con el primer mensaje del usuario o un valor predeterminado
-              chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Chat actual";
+              chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Nuevo Chat";
 
               chatItem.addEventListener('click', () => { // Agrega un event listener para cuando se hace clic en el elemento de lista
+                if (botIsThinking) {
+                  alert("Espera a que el bot termine de responder antes de cambiar de chat.");
+                  return;
+                }
                 setActiveChat(chat); // Establece el chat como activo
               });
 
                // Agregar el chat-item al contenedor
-    chatContainer.appendChild(chatItem);
+              chatContainer.appendChild(chatItem);
       
               // Agregar botón de eliminar
               const deleteButton = document.createElement("button");
@@ -157,10 +172,10 @@
               deleteButton.innerHTML = "delete"; // Establece el texto del botón
 
                // Agregar el delete-button al contenedor
-    chatContainer.appendChild(deleteButton);
+              chatContainer.appendChild(deleteButton);
 
-// Agregar el contenedor a la lista de chats
-chatList.appendChild(chatContainer);
+              // Agregar el contenedor a la lista de chats
+              chatList.appendChild(chatContainer);
             });
           }
       
@@ -189,6 +204,9 @@ chatList.appendChild(chatContainer);
             // Mostrar el mensaje del usuario en el chat
             displayMessage("Usted", userMessage, "user-message");
             chats[currentChatIndex].messages.push({ sender: "Usted", text: userMessage, class: "user-message" });
+
+            // Actualizar la lista de chats después de enviar un mensaje
+            updateChatList();
       
             // Obtener el modelo de lenguaje
             const model = genAI.getGenerativeModel({
@@ -197,34 +215,88 @@ chatList.appendChild(chatContainer);
             const prompt = userMessage;
       
             try {
-              // Mostrar la animación de carga
-              loadingIndicator.style.display = "block";
-      
+               // Mostrar un mensaje vacío con la clase loading-indicator
+              displayMessage("Farmabot", "", "bot-message");
+
+               // Deshabilitar el botón "Nuevo Chat" y los botones de cambio de chat
+              newChatButton.disabled = true;
+              botIsThinking = true;
+              disableChatItems(); // Nueva función para deshabilitar los botones de cambio de chat
+
               // Generar la respuesta del chatbot
               const result = await model.generateContent(prompt);
               const response = await result.response;
       
-              // Ocultar la animación de carga
-              loadingIndicator.style.display = "none";
+              // Esperar un pequeño retraso antes de intentar eliminar el mensaje de carga
+              setTimeout(() => {
+                // Eliminar el mensaje vacío con la clase loading-indicator
+                const loadingMessage = chatOutput.querySelector(".bot-message.loading-indicator");
+                if (loadingMessage) {
+                  chatOutput.removeChild(loadingMessage);
+                }
       
               // Mostrar la respuesta del chatbot en el chat
               displayMessage("Farmabot", response.text(), "bot-message");
               chats[currentChatIndex].messages.push({ sender: "Farmabot", text: response.text(), class: "bot-message" });
+
+              }, 100); // Retraso de 100 milisegundos
+
+              // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems(); // Nueva función para habilitar los botones de cambio de chat
             } catch (error) {
               // Manejar errores
               console.error("Error al generar contenido:", error);
               displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
+               // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat si hay un error
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems();
             }
           });
       
           // Event listener para el botón "Nuevo Chat"
           newChatButton.addEventListener("click", createChat);
+
+          // Nuevas funciones para deshabilitar y habilitar los botones de cambio de chat
+          function disableChatItems() {
+            const chatItems = document.querySelectorAll(".chat-item");
+            chatItems.forEach(item => {
+              item.disabled = true;
+            });
+          }
+
+          function enableChatItems() {
+            const chatItems = document.querySelectorAll(".chat-item");
+            chatItems.forEach(item => {
+              item.disabled = false;
+            });
+          }
       
           // Función para mostrar un mensaje en el chat
           function displayMessage(sender, message, messageClass) {
             const messageElement = document.createElement("p");
             messageElement.innerHTML = `<strong>${sender}</strong><br>${message}`;
             messageElement.classList.add(messageClass);
+
+          // Agregar la clase loading-indicator si el remitente es el bot y el mensaje está vacío
+          if (sender === "Farmabot" && message === "") {
+              // Crear un elemento div para la animación
+              const loadingIndicator = document.createElement("div");
+              loadingIndicator.classList.add("loading-indicator");
+
+              // Crear los tres divs para la animación
+              for (let i = 1; i <= 3; i++) {
+                const animationDiv = document.createElement("div");
+                animationDiv.classList.add(`loading-animation-${i}`);
+                loadingIndicator.appendChild(animationDiv);
+              }
+
+              // Agregar el indicador de carga al mensaje
+              messageElement.appendChild(loadingIndicator);
+            }
+
             chatOutput.appendChild(messageElement);
             chatOutput.scrollTop = chatOutput.scrollHeight; // Desplazarse al final del chat
           }
@@ -258,6 +330,7 @@ chatList.appendChild(chatContainer);
 
             // Mostrar el chat actual
             setActiveChat(chats[currentChatIndex]);
+            updateChatList(); // Actualizar la lista de chats después de eliminar un chat
           }
       
           // Event listener para los botones de eliminar
