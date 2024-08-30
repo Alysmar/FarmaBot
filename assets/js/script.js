@@ -64,9 +64,17 @@ function ventanaRegister() {
   }
 }
 
+
+
 function iniciarSesion() {
   var correo = document.getElementById("correo_login").value;
   var contrasena = document.getElementById("contrasena_login").value;
+
+  // Validación en el Frontend
+  if (!correo || !contrasena) {
+    alert("Por favor, ingrese su correo electrónico y contraseña.");
+    return;
+  }
 
   var data = {
     correo: correo,
@@ -102,12 +110,28 @@ function iniciarSesion() {
     });
 }
 
+function validarCorreo(correo) {
+  var re = /\S+@\S+\.\S+/;
+  return re.test(correo);
+}
+
 function registrarUsuario() {
   // Obtener los valores de los inputs
   var nombreCompleto = document.getElementById("nombre_completo").value;
   var correo = document.getElementById("correo_registro").value;
   var usuario = document.getElementById("usuario").value;
   var contrasena = document.getElementById("contrasena_registro").value;
+
+  // Validación en el frontend
+  if (!nombreCompleto || !correo || !usuario || !contrasena) {
+    alert("Por favor, complete todos los campos.");
+    return;
+  }
+
+  if (!validarCorreo(correo)) {
+    alert("Por favor, ingrese un correo electrónico válido.");
+    return;
+  }
 
   // Crear un objeto JSON con los datos
   var data = {

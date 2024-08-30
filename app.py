@@ -1,15 +1,25 @@
-from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for
+from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session
 
 from psycopg2 import connect, extras
 from cryptography.fernet import Fernet, InvalidToken
 import os
+import secrets
 
 app = Flask(__name__, static_url_path='/assets', static_folder='assets')
+
+SECRET_KEY_FILE = 'secret_key.txt'
+
+if not os.path.exists(SECRET_KEY_FILE):
+    with open(SECRET_KEY_FILE, 'w') as f:
+        f.write(secrets.token_urlsafe(32))
+
+with open(SECRET_KEY_FILE, 'r') as f:
+    app.secret_key = f.read().strip()
 
 
 host = 'localhost'
 port = 5432
-dbname = 'usuariosdb'
+dbname = 'postgres'
 user = 'postgres'
 password = '1234'
 
@@ -52,6 +62,10 @@ def login():
     correo = data.get('correo')
     contrasena = data.get('contrasena')
 
+    # Validación en el Backend
+    if not correo or not contrasena:
+        return jsonify({'message': 'Por favor, ingrese su correo electrónico y contraseña.'}), 400
+
     conn = get_connection()
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
@@ -68,6 +82,7 @@ def login():
             print("Contraseña Ingresada:", contrasena) # Nueva línea para depuración
             if contrasena_descifrada and contrasena_descifrada.lower().strip() == contrasena.lower().strip():
                 print("Contraseña correcta")
+                session['correo'] = correo
                 return jsonify({'message': 'Inicio de sesión exitoso'}), 200
             else:
                 print("Contraseña incorrecta")
@@ -82,14 +97,26 @@ def login():
         cur.close()
         conn.close()
 
+def validar_correo(correo):
+    import re
+    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    return re.fullmatch(regex, correo)
+
 
 @app.post('/api/users')
 def create_user():
     new_user = request.get_json()
-    nombre_completo = new_user['nombre_completo']
-    usuario = new_user['usuario']
-    correo = new_user['correo']
-    contrasena = new_user['contrasena']  # Obtener la contraseña sin encriptar
+    nombre_completo = new_user.get('nombre_completo')
+    usuario = new_user.get('usuario')
+    correo = new_user.get('correo')
+    contrasena = new_user.get('contrasena') 
+
+     # Validación en el backend
+    if not nombre_completo or not usuario or not correo or not contrasena:
+        return jsonify({'error': 'Todos los campos son obligatorios'}), 400
+
+    if not validar_correo(correo):
+        return jsonify({'error': 'Ingrese un correo electrónico válido'}), 400
 
     key = cargar_llave()
     contrasena_encriptada = encriptar_contrasena(contrasena, key)  # Encriptar aquí
@@ -124,7 +151,26 @@ def create_user():
 
 @app.route('/farmabot')
 def farmabot():
-    return render_template('ChatBot/farmabot.html')  # Ruta relativa a la carpeta 'templates'
+    if 'correo' in session: # Asegúrate de usar 'correo' si así lo defines en la sesión
+        return render_template('ChatBot/farmabot.html') 
+    return redirect(url_for('home'))
+
+# ... other imports ...
+
+@app.route('/api/check_session')
+def check_session():
+    if 'correo' in session:
+        print("Sesión válida:", session)  # Mensaje de depuración
+        return jsonify({'message': 'Sesión válida'}), 200
+    else:
+        print("Sesión no válida")  # Mensaje de depuración
+        return jsonify({'message': 'Sesión no válida ingresa tus datos para iniciar sesión'}), 401
+
+@app.route('/logout')
+def logout():
+    # Eliminar la sesión del usuario
+    session.pop('correo', None)
+    return redirect(url_for('home')) 
 
 @app.route('/')
 def home():
