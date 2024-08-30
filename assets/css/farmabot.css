@@ -2,11 +2,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
 
 /*Clases*/
+*{
+  text-decoration: none;
+  font-family: "Roboto", sans-serif;
+}
+
 /*Body*/
 body {
-  background-color: #222;
-  color: #eee;
-  font-family: sans-serif;
+  background-image: url(../images/fondo2.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  color: white;
   margin: 0;
 }
 
@@ -18,7 +26,7 @@ body {
 
 /*Sidebar*/
 .sidebar {
-  background-color: #111;
+  background-color: rgba(0, 128, 255, 0.5);
   width: 200px;
   padding: 20px;
   flex-direction: column;
@@ -33,18 +41,19 @@ body {
 /*Sidebar - botones*/
 .sidebar button {
   display: flex;
-  background-color: #333;
-  color: #eee;
-  border: none;
+  border: 2px solid white;
+  background: transparent;
+  color: white;
   padding: 10px 20px;
   margin-bottom: 10px;
-  border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 690;
 }
 
 .sidebar button:hover {
-  background: #4caf50;
+  background: white;
+  color: #46A2FD;
 }
 
 .action-buttons {
@@ -122,8 +131,8 @@ body {
 
 /*Entrada de datos - input*/
 .input-area input {
-  background-color: #444;
-  color: #eee;
+  background-color: #f2f2f2;
+  color: black;
   border: none;
   padding: 10px 20px;
   border-radius: 10px;
@@ -141,7 +150,8 @@ body {
 
 /*Caja de mensaje del usuario*/
 .user-message {
-  background-color: #525252;
+  background-color: #7aa6d2;
+  color: black;
   border-radius: 10px;
   padding: 20px 20px 30px 20px;
   margin-bottom: 20px;
@@ -150,7 +160,7 @@ body {
 
 /*Caja de mensaje del bot*/
 .bot-message {
-  background-color: #333;
+  background-color: #1f7ad4;
   border-radius: 10px;
   padding: 20px 20px 30px 20px;
   margin-bottom: 20px;
@@ -280,7 +290,7 @@ body {
 /*Boton enviar*/
 #send-button {
   padding: 10px;
-  background-color: #4caf50;
+  background-color:  #46A2FD;
   color: white;
   border: none;
   cursor: pointer;
@@ -288,5 +298,6 @@ body {
 }
 
 #send-button:hover {
-  background: #0b490d;
+  background:  rgba(0, 128, 255, 0.5);
+  color: white;
 }
