@@ -65,6 +65,7 @@ function ventanaRegister() {
 }
 
 
+
 function iniciarSesion() {
   var correo = document.getElementById("correo_login").value;
   var contrasena = document.getElementById("contrasena_login").value;
