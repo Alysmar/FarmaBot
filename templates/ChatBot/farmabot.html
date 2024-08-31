@@ -84,253 +84,208 @@
       </script>
 
       <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai"; // Importa la clase GoogleGenerativeAI
-      
-        document.addEventListener("DOMContentLoaded", () => { // Espera a que el DOM esté completamente cargado
-      
-          // Obtener referencias a elementos del DOM
-          const newChatButton = document.querySelector(".new-chat-btn button"); // Botón para nuevo chat
-          const chatList = document.getElementById("chat-list"); // Lista de chats recientes
-          const chatContainer = document.querySelector(".content"); // Contenedor principal del chat
-          const chatOutput = document.getElementById("chat-output"); // Área donde se muestran los mensajes
-          const userInput = document.getElementById("user-input"); // Campo de entrada del usuario
-          const sendButton = document.getElementById("send-button"); // Botón para enviar mensaje
-      
-          const loadingIndicator = document.querySelector(".loading-indicator"); // Indicador de carga
-      
-          // Array para almacenar los objetos de chat
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        document.addEventListener("DOMContentLoaded", () => {
+          // Referencias a elementos del DOM
+          const newChatButton = document.querySelector(".new-chat-btn button");
+          const chatList = document.getElementById("chat-list");
+          const chatOutput = document.getElementById("chat-output");
+          const userInput = document.getElementById("user-input");
+          const sendButton = document.getElementById("send-button");
+
+          // Array para almacenar los chats
           let chats = [];
-          let currentChatIndex = 0; // Índice del chat actual
+          let currentChatIndex = 0;
 
           // Variable para controlar si el bot está pensando
           let botIsThinking = false;
-      
+
           // Función para crear un nuevo chat
           function createChat() {
+            // Limitar a 5 chats
             if (chats.length >= 5) {
-              alert("Ya tienes el máximo de 5 chats activos. Por favor, cierra uno antes de crear otro.");
-              return; // Salir de la función si ya hay 5 chats
-            }
-            if (botIsThinking) {
-              alert("Espera a que el bot termine de responder antes de crear un nuevo chat.");
+              alert("Máximo 5 chats. Elimina uno antes de crear otro.");
               return;
             }
+
+            // Esperar a que el bot termine de responder
+            if (botIsThinking) {
+              alert("Espera a que el bot termine de responder.");
+              return;
+            }
+
             const newChat = {
-              id: chats.length + 1, // ID del chat
-              messages: [], // Array para almacenar los mensajes del chat
-              element: document.createElement("div") // Elemento del DOM para el chat
+              id: chats.length + 1,
+              messages: [],
             };
-            newChat.element.classList.add("chat"); // Agrega la clase "chat" al elemento
-            //chatContainer.appendChild(newChat.element); // Agrega el elemento al contenedor de chats
-            chats.push(newChat); // Agrega el nuevo chat al array de chats
-      
-            // Agregar el saludo inicial
+
+            chats.push(newChat);
+
+            // Saludo inicial
             displayMessage("Farmabot", "Hola! ¿En qué puedo ayudarte?", "bot-message");
             newChat.messages.push({ sender: "Farmabot", text: "Hola! ¿En qué puedo ayudarte?", class: "bot-message" });
-      
-            // Actualizar la lista de chats recientes
+
+            // Actualizar la lista de chats y activar el nuevo chat
             updateChatList();
-      
-            // Hacer este nuevo chat el activo
             setActiveChat(newChat);
           }
-      
+
           // Función para actualizar la lista de chats recientes
           function updateChatList() {
-            chatList.innerHTML = ''; // Limpia la lista de chats
+            chatList.innerHTML = '';
             chats.forEach(chat => {
-              // Crear un contenedor para el chat-item y el delete-button
               const chatContainer = document.createElement("div");
-              chatContainer.classList.add("chat-container"); // Agrega una clase para estilos
+              chatContainer.classList.add("chat-container");
 
-              const chatItem = document.createElement("button"); // Crea un elemento de lista para cada chat
-              chatItem.classList.add("chat-item"); // Agregar una clase para estilos
-              //chatItem.textContent = `Chat ${chat.id}`; // Establece el texto del elemento de lista
+              const chatItem = document.createElement("button");
+              chatItem.classList.add("chat-item");
 
-              // Obtener el primer mensaje del usuario
+              // Mostrar el primer mensaje del usuario o "Nuevo Chat"
               const firstUserMessage = chat.messages.find(message => message.sender === "Usted");
-
-              // Establecer el texto del botón con el primer mensaje del usuario o un valor predeterminado
               chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Nuevo Chat";
 
-              chatItem.addEventListener('click', () => { // Agrega un event listener para cuando se hace clic en el elemento de lista
+              // Cambiar al chat seleccionado
+              chatItem.addEventListener('click', () => {
                 if (botIsThinking) {
-                  alert("Espera a que el bot termine de responder antes de cambiar de chat.");
+                  alert("Espera a que el bot termine de responder.");
                   return;
                 }
-                setActiveChat(chat); // Establece el chat como activo
+                setActiveChat(chat);
               });
 
-               // Agregar el chat-item al contenedor
               chatContainer.appendChild(chatItem);
-      
-              // Agregar botón de eliminar
-              const deleteButton = document.createElement("button");
-              deleteButton.classList.add("material-symbols-outlined", "delete-button"); // Agrega clases al botón
-              deleteButton.innerHTML = "delete"; // Establece el texto del botón
 
-               // Agregar el delete-button al contenedor
+              // Botón para eliminar el chat
+              const deleteButton = document.createElement("button");
+              deleteButton.classList.add("material-symbols-outlined", "delete-button");
+              deleteButton.innerHTML = "delete";
               chatContainer.appendChild(deleteButton);
 
-              // Agregar el contenedor a la lista de chats
               chatList.appendChild(chatContainer);
             });
           }
-      
+
           // Función para establecer un chat como activo
           function setActiveChat(chat) {
-            // Limpiar el contenido del chat actual
             chatOutput.innerHTML = '';
-            currentChatIndex = chats.indexOf(chat); // Actualiza el índice del chat actual
-      
-            // Mostrar los mensajes del chat seleccionado
+            currentChatIndex = chats.indexOf(chat);
+
+            // Mostrar los mensajes del chat activo
             chat.messages.forEach(message => {
               displayMessage(message.sender, message.text, message.class);
             });
           }
-      
+
           // Inicializar la API de Google Generative AI
-          const API_KEY = ""; // Reemplaza con tu clave de API
+          const API_KEY = "YOUR_API_KEY"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
-      
+
           // Event listener para el botón "Enviar"
           sendButton.addEventListener("click", async () => {
-            // Obtener el mensaje del usuario
             const userMessage = userInput.value;
-            userInput.value = ""; // Limpiar el campo de entrada
-      
-            // Mostrar el mensaje del usuario en el chat
+            userInput.value = "";
+
+            // Mostrar el mensaje del usuario
             displayMessage("Usted", userMessage, "user-message");
             chats[currentChatIndex].messages.push({ sender: "Usted", text: userMessage, class: "user-message" });
 
-            // Actualizar la lista de chats después de enviar un mensaje
             updateChatList();
-      
+
             // Obtener el modelo de lenguaje
             const model = genAI.getGenerativeModel({
               model: "gemini-1.5-pro-latest",
             });
-            const prompt = userMessage;
-      
-            try {
-               // Mostrar un mensaje vacío con la clase loading-indicator
-              displayMessage("Farmabot", "", "bot-message");
 
-               // Deshabilitar el botón "Nuevo Chat" y los botones de cambio de chat
+            try {
+              // Deshabilitar botones mientras el bot está pensando
               newChatButton.disabled = true;
               botIsThinking = true;
-              disableChatItems(); // Nueva función para deshabilitar los botones de cambio de chat
+              disableChatItems();
+              disableDeleteButtons();
 
-              // Generar la respuesta del chatbot
-              const result = await model.generateContent(prompt);
+              // Generar la respuesta del bot
+              const result = await model.generateContent(userMessage);
               const response = await result.response;
-      
-              // Esperar un pequeño retraso antes de intentar eliminar el mensaje de carga
-              setTimeout(() => {
-                // Eliminar el mensaje vacío con la clase loading-indicator
-                const loadingMessage = chatOutput.querySelector(".bot-message.loading-indicator");
-                if (loadingMessage) {
-                  chatOutput.removeChild(loadingMessage);
-                }
-      
-              // Mostrar la respuesta del chatbot en el chat
+
+              // Mostrar la respuesta del bot
               displayMessage("Farmabot", response.text(), "bot-message");
               chats[currentChatIndex].messages.push({ sender: "Farmabot", text: response.text(), class: "bot-message" });
 
-              }, 100); // Retraso de 100 milisegundos
-
-              // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat
-              newChatButton.disabled = false;
-              botIsThinking = false;
-              enableChatItems(); // Nueva función para habilitar los botones de cambio de chat
-            } catch (error) {
-              // Manejar errores
-              console.error("Error al generar contenido:", error);
-              displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
-               // Habilitar el botón "Nuevo Chat" y los botones de cambio de chat si hay un error
+              // Habilitar botones después de que el bot responde
               newChatButton.disabled = false;
               botIsThinking = false;
               enableChatItems();
+              enableDeleteButtons();
+            } catch (error) {
+              console.error("Error al generar contenido:", error);
+              displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
+
+              // Habilitar botones en caso de error
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems();
+              enableDeleteButtons();
             }
           });
-      
+
           // Event listener para el botón "Nuevo Chat"
           newChatButton.addEventListener("click", createChat);
 
-          // Nuevas funciones para deshabilitar y habilitar los botones de cambio de chat
+          // Funciones para deshabilitar/habilitar botones de chat
           function disableChatItems() {
-            const chatItems = document.querySelectorAll(".chat-item");
-            chatItems.forEach(item => {
-              item.disabled = true;
-            });
+            document.querySelectorAll(".chat-item").forEach(item => item.disabled = true);
           }
 
           function enableChatItems() {
-            const chatItems = document.querySelectorAll(".chat-item");
-            chatItems.forEach(item => {
-              item.disabled = false;
-            });
+            document.querySelectorAll(".chat-item").forEach(item => item.disabled = false);
           }
-      
+
+          // Funciones para deshabilitar/habilitar botones de eliminar
+          function disableDeleteButtons() {
+            document.querySelectorAll(".delete-button").forEach(button => button.disabled = true);
+          }
+
+          function enableDeleteButtons() {
+            document.querySelectorAll(".delete-button").forEach(button => button.disabled = false);
+          }
+
           // Función para mostrar un mensaje en el chat
           function displayMessage(sender, message, messageClass) {
             const messageElement = document.createElement("p");
             messageElement.innerHTML = `<strong>${sender}</strong><br>${message}`;
             messageElement.classList.add(messageClass);
-
-          // Agregar la clase loading-indicator si el remitente es el bot y el mensaje está vacío
-          if (sender === "Farmabot" && message === "") {
-              // Crear un elemento div para la animación
-              const loadingIndicator = document.createElement("div");
-              loadingIndicator.classList.add("loading-indicator");
-
-              // Crear los tres divs para la animación
-              for (let i = 1; i <= 3; i++) {
-                const animationDiv = document.createElement("div");
-                animationDiv.classList.add(`loading-animation-${i}`);
-                loadingIndicator.appendChild(animationDiv);
-              }
-
-              // Agregar el indicador de carga al mensaje
-              messageElement.appendChild(loadingIndicator);
-            }
-
             chatOutput.appendChild(messageElement);
-            chatOutput.scrollTop = chatOutput.scrollHeight; // Desplazarse al final del chat
+            chatOutput.scrollTop = chatOutput.scrollHeight;
           }
-      
+
           // Función para eliminar un chat
           function removeChat(chatIndex) {
-            chatList.children[chatIndex].remove(); // Eliminar de la lista de chats
-            //chatContainer.children[chatIndex].remove();
+            chatList.children[chatIndex].remove();
             chats.splice(chatIndex, 1);
-      
-            // 1. Si hay un solo chat y se borra, simular el comportamiento de inicio
+
+            // Manejar la eliminación del último chat
             if (chats.length === 0) {
-            chats = []; // Reiniciar el array de chats
-            currentChatIndex = 0; // Reiniciar el índice del chat actual
-            createChat(); // Crear un nuevo chat
-            return; // Salir de la función después de crear un nuevo chat
+              chats = [];
+              currentChatIndex = 0;
+              createChat();
+              return;
             }
 
-            // 2. Si hay más de un chat y se borra el primero, mostrar el siguiente
+            // Ajustar el índice del chat actual
             if (chatIndex === 0) {
               currentChatIndex = 0;
-            } 
-            // 3. Si hay más de un chat y se borra el último, mostrar el anterior
-            else if (chatIndex === chats.length) {
+            } else if (chatIndex === chats.length) {
               currentChatIndex = chats.length - 1;
-            } 
-            // 4. Si hay más de un chat y se borra uno intermedio, ajustar los índices
-            else if (currentChatIndex > chatIndex) {
+            } else if (currentChatIndex > chatIndex) {
               currentChatIndex--;
             }
 
             // Mostrar el chat actual
             setActiveChat(chats[currentChatIndex]);
-            updateChatList(); // Actualizar la lista de chats después de eliminar un chat
+            updateChatList();
           }
-      
+
           // Event listener para los botones de eliminar
           document.addEventListener("click", (event) => {
             if (event.target.classList.contains("delete-button")) {
@@ -338,13 +293,13 @@
               removeChat(chatIndex);
             }
           });
-      
-          // Crear el chat inicial al cargar la página
+
+          // Crear el chat inicial
           createChat();
         });
       </script>
 
-        <!--<script src="assets/js/farmabot.js"></script>-->
+        <!--<script src="/assets/js/farmabot.js"></script>-->
       </div>
     </div>
   </body>
