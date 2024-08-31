@@ -78,6 +78,8 @@ body {
   margin: 0px 10px 0px 0px;
   flex-grow: 1;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
 }
 
 .chat-container .material-symbols-outlined {
