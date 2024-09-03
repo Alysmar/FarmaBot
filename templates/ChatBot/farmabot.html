@@ -62,7 +62,7 @@
         
         <!--Area de escritura-->
         <div id="chat-input" class="typing-area">
-          <form action="#" class="typing-form">
+          <form class="typing-form">
             <div class="input-area">
               <input
                 type="text"
@@ -99,12 +99,13 @@
           // Array para almacenar los chats
           let chats = [];
           let currentChatIndex = 0;
+          let currentChatId = null; // Variable para almacenar el ID del chat actual
 
           // Variable para controlar si el bot está pensando
           let botIsThinking = false;
 
           // Función para crear un nuevo chat
-          function createChat() {
+          async function createChat() {
             // Limitar a 5 chats
             if (chats.length >= 5) {
               alert("Máximo 5 chats. Elimina uno antes de crear otro.");
@@ -117,21 +118,135 @@
               return;
             }
 
-            const newChat = {
-              id: chats.length + 1,
-              messages: [],
-            };
+            
+            
+
+            // Llamada al backend para crear el chat en la base de datos
+   try {
+
+// Reemplaza usuarioId con el ID del usuario actual
+const usuarioId = await obtenerUsuarioId(); // Obtiene el ID del usuario
+
+ // Asegúrate de que usuarioId es un entero
+ const usuarioIdInt = parseInt(usuarioId, 10);
+
+        const response = await fetch('/api/chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario_id: usuarioId, estado: 'activo' })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const newChat = {
+            id: data.id,
+            messages: [],
+          };
+
+            //const newChat = {
+              //id: chats.length + 1,
+              //messages: [],
+            //};
 
             chats.push(newChat);
+            currentChatId = data.id; // Actualizar el ID del chat actual
+
 
             // Saludo inicial
             displayMessage("Farmabot", "Hola! ¿En qué puedo ayudarte?", "bot-message");
-            newChat.messages.push({ sender: "Farmabot", text: "Hola! ¿En qué puedo ayudarte?", class: "bot-message" });
+            newChat.messages.push({ sender: "Farmabot", contenido: "Hola! ¿En qué puedo ayudarte?", estilo: "bot-message" });
+
+
+// Guardar el saludo inicial en la base de datos
+try {
+      const responseSaludo = await fetch('/api/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: currentChatId, emisor: 'Farmabot', contenido: 'Hola! ¿En qué puedo ayudarte?', estilo: "bot-message" })
+      });
+
+      if (!responseSaludo.ok) {
+        console.error('Error al guardar el saludo inicial:', responseSaludo.status);
+        // Manejar el error apropiadamente
+      }
+    } catch (error) {
+      console.error('Error al guardar el saludo inicial:', error);
+      // Manejar el error apropiadamente
+    }
+
 
             // Actualizar la lista de chats y activar el nuevo chat
             updateChatList();
             setActiveChat(newChat);
-          }
+          } else {
+          console.error('Error al crear el chat en la base de datos:', response.status);
+          // Manejar el error apropiadamente, por ejemplo, mostrando un mensaje al usuario
+        }
+      } catch (error) {
+        console.error('Error al crear el chat:', error);
+        // Manejar el error apropiadamente
+      }
+}
+
+
+async function obtenerUsuarioId() {
+  try {
+    const response = await fetch('/api/obtener_usuario_id'); // Ruta a tu endpoint
+    if (response.ok) {
+      const data = await response.json();
+      return data.usuario_id;
+    } else {
+      console.error('Error al obtener el ID del usuario:', response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al obtener el ID del usuario:', error);
+    return null;
+  }
+}
+
+// Función para obtener los chats y mensajes del usuario
+async function obtenerChatsUsuario() {
+  const usuarioId = await obtenerUsuarioId();
+  try {
+    const response = await fetch(`/api/chats/usuario/${usuarioId}`);
+    if (response.ok) {
+      const data = await response.json();
+// Obtener los mensajes para cada chat
+for (let chat of data) {
+        const messagesResponse = await fetch(`/api/mensajes/chat/${chat.id}`);
+        if (messagesResponse.ok) {
+          chat.messages = await messagesResponse.json();
+        } else {
+          console.error('Error al obtener los mensajes del chat:', messagesResponse.status);
+        }
+      }
+
+
+
+
+      chats = data;
+      if (chats.length > 0) {
+        currentChatId = chats[0].id;
+        updateChatList();
+        setActiveChat(chats[0]);
+      }
+    } else {
+      console.error('Error al obtener los chats del usuario:', response.status);
+      // Manejar el error apropiadamente
+    }
+  } catch (error) {
+    console.error('Error al obtener los chats del usuario:', error);
+    // Manejar el error apropiadamente
+  }
+}
+
+
+
+
+
+
+
 
           // Función para actualizar la lista de chats recientes
           function updateChatList() {
@@ -144,8 +259,8 @@
               chatItem.classList.add("chat-item");
 
               // Mostrar el primer mensaje del usuario o "Nuevo Chat"
-              const firstUserMessage = chat.messages.find(message => message.sender === "Usted");
-              chatItem.textContent = firstUserMessage ? firstUserMessage.text : "Nuevo Chat";
+              const firstUserMessage = chat.messages.find(message => message.emisor === "usuario");
+              chatItem.textContent = firstUserMessage ? firstUserMessage.contenido : "Nuevo Chat";
 
               // Cambiar al chat seleccionado
               chatItem.addEventListener('click', () => {
@@ -175,24 +290,47 @@
 
             // Mostrar los mensajes del chat activo
             chat.messages.forEach(message => {
-              displayMessage(message.sender, message.text, message.class);
+              console.log(message);
+              displayMessage(message.emisor, message, message.estilo); // Cambiado a message.contenido
             });
           }
 
           // Inicializar la API de Google Generative AI
-          const API_KEY = "YOUR_API_KEY"; // Reemplaza con tu clave de API
+          const API_KEY = "AIzaSyA95u-gG152XQ__y8X8QHsKiOeDOxK1n7A"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
 
+
+           // Llamar a la función obtenerChatsUsuario al iniciar la sesión
+obtenerChatsUsuario();
+
           // Event listener para el botón "Enviar"
-          sendButton.addEventListener("click", async () => {
+          sendButton.addEventListener("click", async (event) => {
+            event.preventDefault();
             const userMessage = userInput.value;
             userInput.value = "";
 
+
+
             // Mostrar el mensaje del usuario
             displayMessage("Usted", userMessage, "user-message");
-            chats[currentChatIndex].messages.push({ sender: "Usted", text: userMessage, class: "user-message" });
+            chats[currentChatIndex].messages.push({ sender: "Usted", contenido: userMessage, estilo: "user-message" });
+
+            try {
+        // Guardar el mensaje del usuario en la base de datos
+        const responseUsuario = await fetch('/api/mensajes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: currentChatId, emisor: 'usuario', contenido: userMessage, estilo: "user-message" }) // Usar currentChatId
+        });
+
+        if (!responseUsuario.ok) {
+          console.error('Error al guardar el mensaje del usuario:', responseUsuario.status);
+          // Manejar el error apropiadamente
+        }
 
             updateChatList();
+
+            
 
             // Obtener el modelo de lenguaje
             const model = genAI.getGenerativeModel({
@@ -211,17 +349,36 @@
               const response = await result.response;
 
               // Mostrar la respuesta del bot
-              displayMessage("Farmabot", response.text(), "bot-message");
-              chats[currentChatIndex].messages.push({ sender: "Farmabot", text: response.text(), class: "bot-message" });
+              displayMessage("Farmabot", response.contenido(), "bot-message");
+              chats[currentChatIndex].messages.push({ sender: "Farmabot", contenido: response.contenido(), estilo: "bot-message" });
+
+
+
+              // Guardar el mensaje del bot en la base de datos
+        const responseBot = await fetch('/api/mensajes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chats[currentChatIndex].id, emisor: 'Farmabot', contenido: response.contenido(), estilo: "bot-message" })
+        });
+
+        if (!responseBot.ok) {
+          console.error('Error al guardar el mensaje del bot:', responseBot.status);
+          // Manejar el error apropiadamente
+        }
 
               // Habilitar botones después de que el bot responde
               newChatButton.disabled = false;
               botIsThinking = false;
               enableChatItems();
               enableDeleteButtons();
+
+// Actualizar la vista del chat después de enviar el mensaje y recibir la respuesta
+setActiveChat(chats[currentChatIndex]);
+
             } catch (error) {
-              console.error("Error al generar contenido:", error);
+              console.error("Error al enviar el mensaje o procesar la respuesta:", error);
               displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
+
 
               // Habilitar botones en caso de error
               newChatButton.disabled = false;
@@ -229,7 +386,12 @@
               enableChatItems();
               enableDeleteButtons();
             }
+          } catch (error) { // Add this catch block
+            console.error("Error:", error);
+            // Handle the error appropriately
+          }
           });
+        
 
           // Event listener para el botón "Nuevo Chat"
           newChatButton.addEventListener("click", createChat);
@@ -255,19 +417,29 @@
           // Función para mostrar un mensaje en el chat
           function displayMessage(sender, message, messageClass) {
             const messageElement = document.createElement("p");
-            messageElement.innerHTML = `<strong>${sender}</strong><br>${message}`;
+            messageElement.innerHTML = `<strong>${sender}</strong><br>${message.contenido}`; // Acceder a message.contenido
             messageElement.classList.add(messageClass);
             chatOutput.appendChild(messageElement);
             chatOutput.scrollTop = chatOutput.scrollHeight;
           }
 
           // Función para eliminar un chat
-          function removeChat(chatIndex) {
-            chatList.children[chatIndex].remove();
-            chats.splice(chatIndex, 1);
+          async function removeChat(chatIndex) {
+            const chatId = chats[chatIndex].id; // Obtener el ID del chat a eliminar
 
-            // Manejar la eliminación del último chat
-            if (chats.length === 0) {
+            try {
+        const response = await fetch(`/api/chats/${chatId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          // Eliminar el chat del array y actualizar la interfaz
+          chatList.children[chatIndex].remove();
+          chats.splice(chatIndex, 1);
+
+          // ... (lógica para manejar la eliminación del último chat y ajustar el índice del chat actual)
+          // Manejar la eliminación del último chat
+          if (chats.length === 0) {
               chats = [];
               currentChatIndex = 0;
               createChat();
@@ -283,9 +455,19 @@
               currentChatIndex--;
             }
 
-            // Mostrar el chat actual
-            setActiveChat(chats[currentChatIndex]);
-            updateChatList();
+          // Mostrar el chat actual
+          setActiveChat(chats[currentChatIndex]);
+      updateChatList();
+        } else {
+          console.error('Error al eliminar el chat de la base de datos:', response.status);
+          // Manejar el error apropiadamente
+        }
+      } catch (error) {
+        console.error('Error al eliminar el chat:', error);
+        // Manejar el error apropiadamente
+      }
+
+
           }
 
           // Event listener para los botones de eliminar
@@ -296,8 +478,16 @@
             }
           });
 
-          // Crear el chat inicial
-          createChat();
+
+
+        // Llamar a la función obtenerChatsUsuario al iniciar la sesión
+  obtenerChatsUsuario().then(() => {
+    // Después de obtener los chats del usuario, verificar si hay chats existentes
+    if (chats.length === 0) {
+      // Si no hay chats, crear uno nuevo
+      createChat();
+    }
+  });
         });
       </script>
 

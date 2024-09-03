@@ -1,3 +1,4 @@
+# Importa las bibliotecas necesarias
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session
 
 from psycopg2 import connect, extras
@@ -5,8 +6,10 @@ from cryptography.fernet import Fernet, InvalidToken
 import os
 import secrets
 
+# Crea una instancia de la aplicación Flask
 app = Flask(__name__, static_url_path='/assets', static_folder='assets')
 
+# Configuración de la clave secreta
 SECRET_KEY_FILE = 'secret_key.txt'
 
 if not os.path.exists(SECRET_KEY_FILE):
@@ -17,12 +20,14 @@ with open(SECRET_KEY_FILE, 'r') as f:
     app.secret_key = f.read().strip()
 
 
+# Configuración de la base de datos
 host = 'localhost'
 port = 5432
 dbname = 'postgres'
 user = 'postgres'
-password = '1234'
+password = 'postgres'
 
+# Configuración de la clave de encriptación
 KEY_FILE = 'clave.key'
 
 def get_connection():
@@ -149,6 +154,45 @@ def create_user():
         conn.close()
 
 
+@app.route('/api/chats/usuario/<int:usuario_id>')
+def get_chats_usuario(usuario_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+    try:
+        cur.execute("SELECT * FROM chats WHERE usuario_id = %s", (usuario_id,))
+        chats = cur.fetchall()
+        for chat in chats:
+            cur.execute("SELECT * FROM mensajes WHERE chat_id = %s", (chat['id'],))
+            chat['messages'] = cur.fetchall()
+        return jsonify(chats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+@app.route('/api/obtener_usuario_id')
+def obtener_usuario_id():
+    if 'correo' in session:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        try:
+            cur.execute('SELECT id FROM usuarios WHERE correo = %s', (session['correo'],))
+            user = cur.fetchone()
+            if user:
+                return jsonify({'usuario_id': user['id']}), 200  # Devuelve un objeto de respuesta
+            else:
+                return jsonify({'error': 'Usuario no encontrado'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cur.close()
+            conn.close()
+    else:
+        return jsonify({'error': 'Sesión no válida'}), 401
+
+
 @app.route('/farmabot')
 def farmabot():
     if 'correo' in session: # Asegúrate de usar 'correo' si así lo defines en la sesión
@@ -156,6 +200,99 @@ def farmabot():
     return redirect(url_for('home'))
 
 # ... other imports ...
+# Endpoint para crear un nuevo chat (/api/chats)
+@app.route('/api/chats', methods=['POST'])
+def create_chat():
+    data = request.get_json()
+    usuario_id = data.get('usuario_id')
+    estado = data.get('estado', 'activo')  # Valor por defecto 'activo'
+
+    print("usuario_id:", usuario_id)  # Imprime el valor de usuario_id
+    print("estado:", estado)  # Imprime el valor de estado
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO chats (usuario_id, estado) VALUES (%s, %s) RETURNING id", (usuario_id, estado))
+        chat_id = cur.fetchone()[0]
+        conn.commit()
+        return jsonify({'id': chat_id}), 201
+    except Exception as e:
+        conn.rollback()
+        import traceback
+        print(traceback.format_exc())  # Imprime la traza completa del error
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+# Endpoint para obtener o eliminar un chat específico (/api/chats/:id)
+@app.route('/api/chats/<int:chat_id>', methods=['GET', 'DELETE'])
+def get_or_delete_chat(chat_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        if request.method == 'GET':
+            cur.execute("SELECT * FROM chats WHERE id = %s", (chat_id,))
+            chat = cur.fetchone()
+            if chat:
+                return jsonify(chat)
+            else:
+                return jsonify({'error': 'Chat no encontrado'}), 404
+        elif request.method == 'DELETE':
+            # Eliminar primero los mensajes asociados al chat
+            cur.execute("DELETE FROM mensajes WHERE chat_id = %s", (chat_id,))
+            # Eliminar el chat
+            cur.execute("DELETE FROM chats WHERE id = %s", (chat_id,))
+            conn.commit()
+            return jsonify({'message': 'Chat y mensajes eliminados'}), 200
+    except Exception as e:
+        conn.rollback()
+        import traceback
+        print(traceback.format_exc())  # Imprime la traza completa del error
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+# Endpoint para crear un nuevo mensaje (/api/mensajes)
+@app.route('/api/mensajes', methods=['POST'])
+def create_message():
+    data = request.get_json()
+    chat_id = data.get('chat_id')
+    emisor = data.get('emisor')
+    contenido = data.get('contenido')
+    estilo = data.get('estilo') 
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO mensajes (chat_id, emisor, contenido, estilo) VALUES (%s, %s, %s, %s)", (chat_id, emisor, contenido, estilo))
+        conn.commit()
+        return jsonify({'message': 'Mensaje guardado correctamente'}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+# Endpoint para obtener los mensajes de un chat específico (/api/mensajes/chat/:chat_id)
+@app.route('/api/mensajes/chat/<int:chat_id>', methods=['GET'])
+def get_mensajes_chat(chat_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+    try:
+        cur.execute("SELECT * FROM mensajes WHERE chat_id = %s", (chat_id,))
+        mensajes = cur.fetchall()
+        return jsonify(mensajes)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 
 @app.route('/api/check_session')
 def check_session():
