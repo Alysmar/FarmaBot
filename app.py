@@ -9,9 +9,10 @@ import secrets
 # Crea una instancia de la aplicación Flask
 app = Flask(__name__, static_url_path='/assets', static_folder='assets')
 
-# Configuración de la clave secreta
+# Configuración de la clave secreta para las sesiones de Flask
 SECRET_KEY_FILE = 'secret_key.txt'
 
+# Si no existe el archivo de la clave secreta, genera una nueva clave
 if not os.path.exists(SECRET_KEY_FILE):
     with open(SECRET_KEY_FILE, 'w') as f:
         f.write(secrets.token_urlsafe(32))
@@ -25,7 +26,7 @@ host = 'localhost'
 port = 5432
 dbname = 'postgres'
 user = 'postgres'
-password = 'postgres'
+password = '1234'
 
 # Configuración de la clave de encriptación
 KEY_FILE = 'clave.key'
@@ -162,7 +163,7 @@ def get_chats_usuario(usuario_id):
         cur.execute("SELECT * FROM chats WHERE usuario_id = %s", (usuario_id,))
         chats = cur.fetchall()
         for chat in chats:
-            cur.execute("SELECT * FROM mensajes WHERE chat_id = %s", (chat['id'],))
+            cur.execute("SELECT * FROM mensajes WHERE chat_id = %s ORDER BY created_at ASC", (chat['id'],))
             chat['messages'] = cur.fetchall()
         return jsonify(chats)
     except Exception as e:
@@ -191,6 +192,28 @@ def obtener_usuario_id():
             conn.close()
     else:
         return jsonify({'error': 'Sesión no válida'}), 401
+    
+
+@app.route('/api/obtener_nombre_usuario')
+def obtener_nombre_usuario():
+    if 'correo' in session:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        try:
+            cur.execute('SELECT nombre_completo FROM usuarios WHERE correo = %s', (session['correo'],))
+            user = cur.fetchone()
+            if user:
+                return jsonify({'nombre_usuario': user['nombre_completo']}), 200
+            else:
+                return jsonify({'error': 'Usuario no encontrado'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cur.close()
+            conn.close()
+    else:
+        return jsonify({'error': 'Sesión no válida'}), 401
+
 
 
 @app.route('/farmabot')
