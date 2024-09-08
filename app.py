@@ -1,16 +1,24 @@
 # Importa las bibliotecas necesarias
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session
+from flask_cors import CORS
+
+from rag import process_files, query_collection
 
 from psycopg2 import connect, extras
 from cryptography.fernet import Fernet, InvalidToken
 import os
 import secrets
+import re
+
 
 # Crea una instancia de la aplicación Flask
 app = Flask(__name__, static_url_path='/assets', static_folder='assets')
+CORS(app)
+
 
 # Configuración de la clave secreta para las sesiones de Flask
 SECRET_KEY_FILE = 'secret_key.txt'
+
 
 # Si no existe el archivo de la clave secreta, genera una nueva clave
 if not os.path.exists(SECRET_KEY_FILE):
@@ -26,31 +34,42 @@ host = 'localhost'
 port = 5432
 dbname = 'postgres'
 user = 'postgres'
-password = '1234'
+password = 'postgres'
+
 
 # Configuración de la clave de encriptación
 KEY_FILE = 'clave.key'
 
+
+# Función para obtener una conexión a la base de datos
 def get_connection():
     conn = connect(host=host, port=port, dbname=dbname, user=user, password=password)
     return conn
 
+
+# Función para generar una nueva clave de encriptación
 def generar_llave():
     key = Fernet.generate_key()
     with open(KEY_FILE, "wb") as key_file:
         key_file.write(key)
     return key
 
+
+# Función para cargar la clave de encriptación desde el archivo
 def cargar_llave():
     if not os.path.exists(KEY_FILE):
         generar_llave()
     return open(KEY_FILE, "rb").read()
 
+
+# Función para encriptar una contraseña
 def encriptar_contrasena(contrasena, key):
     f = Fernet(key)
     contrasena_encriptada = f.encrypt(contrasena.encode('utf-8'))
     return contrasena_encriptada
 
+
+# Función para desencriptar una contraseña
 def desencriptar_contrasena(contrasena_encriptada, key):
     f = Fernet(key)
     try:
@@ -61,8 +80,11 @@ def desencriptar_contrasena(contrasena_encriptada, key):
         return None  # Devolver None en caso de error
     return contrasena_descifrada
 
+
+# Ruta para el inicio de sesión (POST /api/login)
 @app.route('/api/login', methods=['POST'])
 def login():
+    # Obtiene los datos del cuerpo de la solicitud (JSON)
     data = request.get_json()
     
     correo = data.get('correo')
@@ -103,12 +125,15 @@ def login():
         cur.close()
         conn.close()
 
+
+# Función para validar el correo electrónico usando una expresión regular
 def validar_correo(correo):
     import re
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     return re.fullmatch(regex, correo)
 
 
+# Ruta para crear un nuevo usuario (POST /api/users)
 @app.post('/api/users')
 def create_user():
     new_user = request.get_json()
@@ -155,6 +180,7 @@ def create_user():
         conn.close()
 
 
+# Ruta para obtener los chats de un usuario específico (GET /api/chats/usuario/:usuario_id)
 @app.route('/api/chats/usuario/<int:usuario_id>')
 def get_chats_usuario(usuario_id):
     conn = get_connection()
@@ -173,6 +199,7 @@ def get_chats_usuario(usuario_id):
         conn.close()
 
 
+# Ruta para obtener el ID del usuario a partir del correo electrónico en la sesión (GET /api/obtener_usuario_id)
 @app.route('/api/obtener_usuario_id')
 def obtener_usuario_id():
     if 'correo' in session:
@@ -194,6 +221,7 @@ def obtener_usuario_id():
         return jsonify({'error': 'Sesión no válida'}), 401
     
 
+# Ruta para obtener el nombre completo del usuario a partir del correo electrónico en la sesión (GET /api/obtener_nombre_usuario)
 @app.route('/api/obtener_nombre_usuario')
 def obtener_nombre_usuario():
     if 'correo' in session:
@@ -215,14 +243,14 @@ def obtener_nombre_usuario():
         return jsonify({'error': 'Sesión no válida'}), 401
 
 
-
+# Ruta para la página de FarmaBot (GET /farmabot)
 @app.route('/farmabot')
 def farmabot():
     if 'correo' in session: # Asegúrate de usar 'correo' si así lo defines en la sesión
         return render_template('ChatBot/farmabot.html') 
     return redirect(url_for('home'))
 
-# ... other imports ...
+
 # Endpoint para crear un nuevo chat (/api/chats)
 @app.route('/api/chats', methods=['POST'])
 def create_chat():
@@ -249,7 +277,8 @@ def create_chat():
         cur.close()
         conn.close()
 
-# Endpoint para obtener o eliminar un chat específico (/api/chats/:id)
+
+# Endpoint para obtener o eliminar un chat específico (GET /api/chats/:id, DELETE /api/chats/:id)
 @app.route('/api/chats/<int:chat_id>', methods=['GET', 'DELETE'])
 def get_or_delete_chat(chat_id):
     conn = get_connection()
@@ -278,7 +307,8 @@ def get_or_delete_chat(chat_id):
         cur.close()
         conn.close()
 
-# Endpoint para crear un nuevo mensaje (/api/mensajes)
+
+# Endpoint para crear un nuevo mensaje (POST /api/mensajes)
 @app.route('/api/mensajes', methods=['POST'])
 def create_message():
     data = request.get_json()
@@ -301,7 +331,7 @@ def create_message():
         conn.close()
 
 
-# Endpoint para obtener los mensajes de un chat específico (/api/mensajes/chat/:chat_id)
+# Endpoint para obtener los mensajes de un chat específico (GET /api/mensajes/chat/:chat_id)
 @app.route('/api/mensajes/chat/<int:chat_id>', methods=['GET'])
 def get_mensajes_chat(chat_id):
     conn = get_connection()
@@ -317,6 +347,7 @@ def get_mensajes_chat(chat_id):
         conn.close()
 
 
+# Ruta para verificar la sesión (GET /api/check_session)
 @app.route('/api/check_session')
 def check_session():
     if 'correo' in session:
@@ -326,15 +357,40 @@ def check_session():
         print("Sesión no válida")  # Mensaje de depuración
         return jsonify({'message': 'Sesión no válida ingresa tus datos para iniciar sesión'}), 401
 
+
+# Ruta para cerrar sesión (GET /logout)
 @app.route('/logout')
 def logout():
     # Eliminar la sesión del usuario
     session.pop('correo', None)
     return redirect(url_for('home')) 
 
+
+# Ruta para la página de inicio (GET /)
 @app.route('/')
 def home():
     return send_file('index_login_register.html')
 
+
+# Ruta para realizar una consulta al sistema RAG (POST /api/query)
+@app.route('/api/query', methods=['POST'])
+def query_api():
+    query = request.json.get('query')
+    if query:
+        results = query_collection(query)
+        # Formatea los resultados para enviarlos al front-end
+        formatted_results = []
+        for result in results['documents'][0]:
+            formatted_results.append({
+                "text": result,
+                "document_title": results['metadatas'][0][results['documents'][0].index(result)]['document_title'],
+                "file_name": results['metadatas'][0][results['documents'][0].index(result)]['file_name']
+            })
+        return jsonify(formatted_results)
+    else:
+        return jsonify({'error': 'No se proporcionó una consulta.'}), 400
+
+
 if __name__ == '__main__':
+    process_files()
     app.run(debug=True)

@@ -103,7 +103,7 @@
           let botIsThinking = false; // Indica si el bot está procesando una respuesta
 
           // --- Inicializar la API de Google Generative AI ---
-          const API_KEY = "YOUR API KEY"; // Reemplaza con tu clave de API
+          const API_KEY = "AIzaSyA37FeznBV79-y-xf8325bluXji7jqFy00"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
 
           // --- Funciones auxiliares ---
@@ -386,59 +386,88 @@
 
               updateChatList();
 
-              // Obtener el modelo de lenguaje
-              const model = genAI.getGenerativeModel({
-                model: "gemini-1.5-pro-latest"
+              // Enviar la consulta al backend para obtener fragmentos relevantes
+              const response = await fetch('/api/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: userMessage })
               });
 
-              try {
-                // Deshabilitar botones mientras el bot está pensando
-                newChatButton.disabled = true;
-                botIsThinking = true;
-                disableChatItems();
-                disableDeleteButtons();
+              if (response.ok) {
+                const data = await response.json();
 
-                // Generar la respuesta del bot
-                const result = await model.generateContent(userMessage);
-                const response = await result.response;
-
-                // Mostrar la respuesta del bot
-                displayMessage("Farmabot", response.text(), "bot-message");
-                chats[currentChatIndex].messages.push({ emisor: "Farmabot", contenido: response.text(), estilo: "bot-message" });
-
-                // Guardar el mensaje del bot en la base de datos
-                const responseBot = await fetch('/api/mensajes', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ chat_id: chats[currentChatIndex].id, emisor: 'Farmabot', contenido: response.text(), estilo: "bot-message" })
-                });
-
-                if (!responseBot.ok) {
-                  console.error('Error al guardar el mensaje del bot:', responseBot.status);
+                // Construir el mensaje para Gemini con la pregunta y los fragmentos
+                let geminiMessage = `Pregunta del usuario: ${userMessage}\n\n`;
+                if (data.length > 0) {
+                  geminiMessage += "Fragmentos relevantes de los documentos:\n";
+                  data.forEach(result => {
+                    geminiMessage += `- ${result.text} (Fuente: ${result.document_title})\n`;
+                  });
+                  geminiMessage += "\nResponde a la pregunta del usuario utilizando la información proporcionada en los fragmentos. Si la información no es suficiente, puedes utilizar tu propio conocimiento para responder.";
+                } else {
+                  geminiMessage += "No se encontraron fragmentos relevantes en los documentos. Responde a la pregunta del usuario utilizando tu propio conocimiento.";
                 }
 
-                // Habilitar botones después de que el bot responde
-                newChatButton.disabled = false;
-                botIsThinking = false;
-                enableChatItems();
-                enableDeleteButtons();
+                // Obtener el modelo de lenguaje
+                const model = genAI.getGenerativeModel({
+                  model: "gemini-1.5-pro-latest"
+                });
 
-                // Actualizar la vista del chat
-                setActiveChat(chats[currentChatIndex]);
-              } catch (error) {
-                console.error("Error al enviar el mensaje o procesar la respuesta:", error);
+                try {
+                  // Deshabilitar botones mientras el bot está pensando
+                  newChatButton.disabled = true;
+                  botIsThinking = true;
+                  disableChatItems();
+                  disableDeleteButtons();
+
+                  // Generar la respuesta de Gemini con el mensaje construido
+                  const result = await model.generateContent(geminiMessage);
+                  const response = await result.response;
+
+                  // Mostrar la respuesta del bot
+                  displayMessage("Farmabot", response.text(), "bot-message");
+                  chats[currentChatIndex].messages.push({ emisor: "Farmabot", contenido: response.text(), estilo: "bot-message" });
+
+                  // Guardar el mensaje del bot en la base de datos
+                  const responseBot = await fetch('/api/mensajes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chats[currentChatIndex].id, emisor: 'Farmabot', contenido: response.text(), estilo: "bot-message" })
+                  });
+
+                  if (!responseBot.ok) {
+                    console.error('Error al guardar el mensaje del bot:', responseBot.status);
+                  }
+
+                  // Habilitar botones después de que el bot responde
+                  newChatButton.disabled = false;
+                  botIsThinking = false;
+                  enableChatItems();
+                  enableDeleteButtons();
+
+                  // Actualizar la vista del chat
+                  setActiveChat(chats[currentChatIndex]);
+                } catch (error) {
+                  console.error("Error al enviar el mensaje o procesar la respuesta:", error);
+                  displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
+
+                  // Habilitar botones en caso de error
+                  newChatButton.disabled = false;
+                  botIsThinking = false;
+                  enableChatItems();
+                  enableDeleteButtons();
+                }
+
+              } else {
+                console.error('Error al consultar el backend:', response.status);
                 displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
-
-                // Habilitar botones en caso de error
-                newChatButton.disabled = false;
-                botIsThinking = false;
-                enableChatItems();
-                enableDeleteButtons();
               }
+
             } catch (error) {
               console.error("Error:", error);
             }
           });
+
 
           // Crea un nuevo chat al hacer clic en el botón "Nuevo Chat"
           newChatButton.addEventListener("click", createChat);
