@@ -8,7 +8,6 @@ from psycopg2 import connect, extras
 from cryptography.fernet import Fernet, InvalidToken
 import os
 import secrets
-import re
 
 
 # Crea una instancia de la aplicación Flask
@@ -375,20 +374,18 @@ def home():
 # Ruta para realizar una consulta al sistema RAG (POST /api/query)
 @app.route('/api/query', methods=['POST'])
 def query_api():
-    query = request.json.get('query')
-    if query:
+        query = request.json['query']
         results = query_collection(query)
-        # Formatea los resultados para enviarlos al front-end
+
+        # Procesar la respuesta de query_collection
         formatted_results = []
-        for result in results['documents'][0]:
+        for i in range(len(results["documents"])):
             formatted_results.append({
-                "text": result,
-                "document_title": results['metadatas'][0][results['documents'][0].index(result)]['document_title'],
-                "file_name": results['metadatas'][0][results['documents'][0].index(result)]['file_name']
+                "text": results["documents"][i][0],
+                "document_title": results["metadatas"][i][0]["document_title"]
             })
+
         return jsonify(formatted_results)
-    else:
-        return jsonify({'error': 'No se proporcionó una consulta.'}), 400
 
 
 if __name__ == '__main__':

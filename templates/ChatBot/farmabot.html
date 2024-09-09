@@ -403,10 +403,13 @@
                   data.forEach(result => {
                     geminiMessage += `- ${result.text} (Fuente: ${result.document_title})\n`;
                   });
-                  geminiMessage += "\nResponde a la pregunta del usuario utilizando la información proporcionada en los fragmentos. Si la información no es suficiente, puedes utilizar tu propio conocimiento para responder.";
+                  geminiMessage += "\n**Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos. Si la información no es relevante para la pregunta o no es suficiente, ignora los fragmentos y utiliza tu propio conocimiento para responder.**"; 
                 } else {
                   geminiMessage += "No se encontraron fragmentos relevantes en los documentos. Responde a la pregunta del usuario utilizando tu propio conocimiento.";
                 }
+
+                // Imprimir la pregunta en la consola
+                console.log("Pregunta enviada a Gemini:", geminiMessage); 
 
                 // Obtener el modelo de lenguaje
                 const model = genAI.getGenerativeModel({

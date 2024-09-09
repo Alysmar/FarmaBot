@@ -1,15 +1,7 @@
 import re
 import chromadb as chroma
 import PyPDF2
-import os
-import shutil
 import spacy
-import time
-import errno
-
-
-#Define la ruta al directorio de la base de datos
-PERSIST_DIRECTORY = "db_chroma"  
 
 
 #Lista de documentos PDF
@@ -26,38 +18,14 @@ nlp = spacy.load("en_core_web_sm")
 processed = False
 
 
-#
-def is_locked(filepath):
-    """Verifica si un archivo está bloqueado por otro proceso."""
-    try:
-        os.rename(filepath, filepath)  # Intenta renombrar el archivo
-        return False  # Si se puede renombrar, no está bloqueado
-    except OSError as e:
-        if e.errno == errno.EACCES:  # Error de permiso (bloqueado)
-            return True
-        else:
-            raise  # Otro tipo de error
-
-
 #Procesamiento de archivos PDF
 def process_files():
     global processed  # Acceder a la variable global
 
     if processed:  # Verificar si ya se procesaron los archivos
         return
-    
-    # Verificar si la base de datos está en uso solo si el archivo existe
-    locked_file = os.path.join(PERSIST_DIRECTORY, "chroma-collections.parquet")
-    if os.path.exists(locked_file) and is_locked(locked_file):
-        print("La base de datos está en uso. Esperando...")
-        while is_locked(locked_file):
-            time.sleep(1)  # Esperar 1 segundo y volver a verificar
 
-    # Eliminar el directorio de la base de datos si existe
-    if os.path.exists(PERSIST_DIRECTORY):
-        shutil.rmtree(PERSIST_DIRECTORY)
-
-    chroma_client = chroma.PersistentClient(path=PERSIST_DIRECTORY)
+    chroma_client = chroma.Client()
     collection = chroma_client.get_or_create_collection(name="docs_farm_collection")
     document_id = 1
 
@@ -141,14 +109,9 @@ def split_text(text):
 
 #Consulta de la colección ChromaDB
 def query_collection(query):
-    chroma_client = chroma.PersistentClient(path=PERSIST_DIRECTORY)
+    chroma_client = chroma.Client()
     collection = chroma_client.get_or_create_collection(name="docs_farm_collection")
     return collection.query(
         query_texts=[query],
         n_results=2, # Puedes ajustar el número de resultados que deseas
     )
-
-
-#Llama a process_files() solo una vez al iniciar la aplicación (si es necesario)
-if not os.path.exists(PERSIST_DIRECTORY):
-    process_files()
