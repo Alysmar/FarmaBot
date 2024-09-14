@@ -103,7 +103,7 @@
           let botIsThinking = false; // Indica si el bot está procesando una respuesta
 
           // --- Inicializar la API de Google Generative AI ---
-          const API_KEY = "YOUR API KEY"; // Reemplaza con tu clave de API
+          const API_KEY = "AIzaSyCTVGcQtFtC3RaY98zZtth0u2v0AI1NFuo"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
 
           // --- Funciones auxiliares ---
@@ -183,7 +183,7 @@
 
             // Esperar a que el bot termine de responder
             if (botIsThinking) {
-              alert("Espera a que el bot termine de responder.");
+              alert("Espera a que Farmabot termine de responder.");
               return;
             }
 
@@ -287,7 +287,7 @@
               // Cambiar al chat seleccionado
               chatItem.addEventListener('click', () => {
                 if (botIsThinking) {
-                  alert("Espera a que el bot termine de responder.");
+                  alert("Espera a que Farmabot termine de responder antes de cambiar de chat.");
                   return;
                 }
                 setActiveChat(chat);
@@ -471,13 +471,22 @@
             }
           });
 
-
           // Crea un nuevo chat al hacer clic en el botón "Nuevo Chat"
-          newChatButton.addEventListener("click", createChat);
+          newChatButton.addEventListener("click", () => {
+            if (botIsThinking) {
+              alert("Espera a que Farmabot termine de responder antes de crear un nuevo chat.");
+              return;
+            } 
+            createChat();
+          });
 
           // Elimina un chat al hacer clic en el botón "Eliminar"
           document.addEventListener("click", (event) => {
             if (event.target.classList.contains("delete-button")) {
+              if (botIsThinking) { 
+                alert("Espera a que Farmabot termine de responder antes de eliminar un chat.");
+                return;
+              }
               const chatIndex = Array.from(chatList.children).indexOf(event.target.parentNode);
               removeChat(chatIndex);
             }

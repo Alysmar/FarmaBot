@@ -51,11 +51,11 @@ def process_files():
             chunks = split_text(pdf_text)  # Divide el texto del PDF
 
             # Imprimir los fragmentos en la terminal
-            print("\nFragmentos del PDF:")
-            for i, chunk in enumerate(chunks):
-                print(f"Fragmento {i+1}:")
-                print(chunk)
-                print("---")  # Separador entre fragmentos
+            #print("\nFragmentos del PDF:")
+            #for i, chunk in enumerate(chunks):
+            #    print(f"Fragmento {i+1}:")
+            #    print(chunk)
+            #    print("---")  # Separador entre fragmentos
 
             generate_embeddings(chunks, document_title, file_name, collection, document_id, pdf_reader) 
             document_id += len(chunks)

@@ -28,10 +28,11 @@ body {
 /*Sidebar*/
 .sidebar {
   background-color: rgba(0, 128, 255, 0.5);
-  width: 200px;
+  width: 230px;
   padding: 20px;
   flex-direction: column;
   display: flex;
+  box-sizing: border-box;
 }
 
 /*Sidebar - h1*/
@@ -322,4 +323,66 @@ body {
 #send-button:hover {
   background:  rgba(0, 128, 255, 0.5);
   color: white;
+}
+
+/*Trabajando en el diseño Responsive*/
+/* Media query para pantallas pequeñas (telefono - pantalla vertical) */
+/* ... tus estilos actuales ... */
+
+/* Media query para pantallas pequeñas (telefono - pantalla vertical) */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: fixed; /* Fijar la barra lateral en la parte superior */
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Asegurar que la barra lateral esté encima del contenido */
+    overflow: hidden; /* Ocultar el contenido que se desborde */
+    transition: height 0.3s ease-in-out; /* Transición suave para la altura */
+  }
+
+  .sidebar.collapsed { /* Clase para cuando la barra lateral está colapsada */
+    height: 50px; /* Altura de la franja cuando está colapsada */
+  }
+
+  .sidebar .sidebar-toggle { /* Estilos para el botón de alternar */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+
+  .sidebar .sidebar-toggle .material-symbols-outlined {
+    font-size: 24px;
+  }
+
+  .sidebar .sidebar-content { /* Estilos para el contenido del sidebar */
+    padding: 20px;
+    display: none; /* Ocultar el contenido inicialmente */
+  }
+
+  .sidebar.expanded .sidebar-content { /* Mostrar el contenido cuando la barra lateral está expandida */
+    display: block;
+  }
+
+  .content {
+    padding: 60px 10px 10px; /* Ajustar el padding del contenido para dejar espacio para la barra lateral */
+  }
+
+  #chat-input {
+    position: relative;
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* Media query para pantallas medianas (por ejemplo, tablets) */
+@media (max-width: 1024px) {
+  /* Ajustes específicos para pantallas medianas */
 }

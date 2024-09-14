@@ -33,7 +33,7 @@ host = 'localhost'
 port = 5432
 dbname = 'postgres'
 user = 'postgres'
-password = '1234'
+password = 'postgres'
 
 
 # Configuración de la clave de encriptación
