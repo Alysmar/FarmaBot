@@ -10,9 +10,9 @@ from nltk.tokenize import sent_tokenize
 
 #Lista de documentos PDF
 documents = [
-    "documentos/Leflunomida.pdf",
-    "documentos/Inyección_de_insulina_glargina.pdf",
-    "documentos/Nevirapina.pdf",
+    #"documentos/Leflunomida.pdf",
+    #"documentos/Inyección_de_insulina_glargina.pdf",
+    #"documentos/Nevirapina.pdf",
     "documentos/Repaglinida.pdf",
 ]
 
@@ -145,11 +145,16 @@ def split_text(text):
     return chunks
 
 
-#Consulta de la colección ChromaDB
 def query_collection(query):
     chroma_client = chroma.Client()
     collection = chroma_client.get_or_create_collection(name="docs_farm_collection")
-    return collection.query(
+
+    results = collection.query(
         query_texts=[query],
-        n_results=3, # Puedes ajustar el número de resultados que deseas
+        n_results=3,
     )
+
+    if results is None or not results['documents']:  # Verificar si results es None o si 'documents' está vacío
+        return "No se encontraron fragmentos relevantes para tu consulta." 
+
+    return results

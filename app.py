@@ -374,18 +374,22 @@ def home():
 # Ruta para realizar una consulta al sistema RAG (POST /api/query)
 @app.route('/api/query', methods=['POST'])
 def query_api():
-        query = request.json['query']
-        results = query_collection(query)
+    query = request.json['query']
+    results = query_collection(query)
 
-        # Procesar la respuesta de query_collection
-        formatted_results = []
-        for i in range(len(results["documents"])):
-            formatted_results.append({
-                "text": results["documents"][i][0],
-                "document_title": results["metadatas"][i][0]["document_title"]
-            })
+    # Verificar si query_collection devolvió un mensaje de "no resultados"
+    if isinstance(results, str):
+        return jsonify({"message": results, "results": []}) 
 
-        return jsonify(formatted_results)
+    # Procesar la respuesta de query_collection (solo si hay resultados)
+    formatted_results = []
+    for i in range(len(results["documents"])):
+        formatted_results.append({
+            "text": results["documents"][i][0],
+            "document_title": results["metadatas"][i][0]["document_title"]
+        })
+
+    return jsonify(formatted_results)
 
 
 if __name__ == '__main__':

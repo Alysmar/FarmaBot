@@ -142,6 +142,28 @@
             }
           }
 
+          //Resume el historial de la conversacion
+          async function resumirHistorial(historial) {
+            // Obtener el modelo de lenguaje para la generación de resúmenes
+            const model = genAI.getGenerativeModel({
+              model: "gemini-1.5-pro-latest" 
+            });
+
+            // Construir el prompt para la generación del resumen
+            const promptResumen = `Por favor, resume la siguiente conversación:\n\n${historial}`;
+
+            try {
+              // Generar el resumen con Gemini
+              const result = await model.generateContent(promptResumen);
+              const resumen = await result.response.text();
+
+              return resumen;
+            } catch (error) {
+              console.error("Error al generar el resumen:", error);
+              return "Error al resumir la conversación.";
+            }
+          }
+
           // Muestra un mensaje en el chat
           function displayMessage(nombreUsuario, message, messageClass) {
             const messageElement = document.createElement("p");
@@ -243,9 +265,9 @@
               if (response.ok) {
                 const data = await response.json();
 
-                // Obtener los mensajes para cada chat
+                // Obtener los mensajes para cada chat y ordenarlos por la columna 'created_at'
                 for (let chat of data) {
-                  const messagesResponse = await fetch(`/api/mensajes/chat/${chat.id}`);
+                  const messagesResponse = await fetch(`/api/mensajes/chat/${chat.id}?orderBy=created_at`);
                   if (messagesResponse.ok) {
                     chat.messages = await messagesResponse.json();
                   } else {
@@ -269,40 +291,49 @@
 
           // Actualiza la lista de chats en la interfaz
           async function updateChatList() {
-            chatList.innerHTML = '';
-            for (let chat of chats) {
-              const chatContainer = document.createElement("div");
-              chatContainer.classList.add("chat-container");
+            // Recorrer los chats existentes
+            for (let i = 0; i < chats.length; i++) {
+              const chat = chats[i];
 
-              const chatItem = document.createElement("button");
-              chatItem.classList.add("chat-item");
+              // Verificar si el elemento del chat ya existe en la lista
+              let chatContainer = chatList.children[i];
+              if (!chatContainer) {
+                // Si no existe, crear un nuevo contenedor y botón de chat
+                chatContainer = document.createElement("div");
+                chatContainer.classList.add("chat-container");
+
+                const chatItem = document.createElement("button");
+                chatItem.classList.add("chat-item");
+                chatItem.addEventListener('click', () => {
+                  if (botIsThinking) {
+                    alert("Espera a que Farmabot termine de responder antes de cambiar de chat.");
+                    return;
+                  }
+                  setActiveChat(chat);
+                });
+                chatContainer.appendChild(chatItem);
+
+                // Botón para eliminar el chat
+                const deleteButton = document.createElement("button");
+                deleteButton.classList.add("material-symbols-outlined", "delete-button");
+                deleteButton.innerHTML = "delete";
+                chatContainer.appendChild(deleteButton);
+
+                chatList.appendChild(chatContainer);
+              }
 
               // Obtener el nombre del usuario para este chat
               const nombreUsuario = await obtenerNombreUsuario();
 
               // Mostrar el primer mensaje del usuario o "Nuevo Chat"
               const firstUserMessage = chat.messages.find(message => message.emisor === nombreUsuario);
-              chatItem.textContent = firstUserMessage ? firstUserMessage.contenido : "Nuevo Chat";
+              chatContainer.querySelector(".chat-item").textContent = firstUserMessage ? firstUserMessage.contenido : "Nuevo Chat";
+            }
 
-              // Cambiar al chat seleccionado
-              chatItem.addEventListener('click', () => {
-                if (botIsThinking) {
-                  alert("Espera a que Farmabot termine de responder antes de cambiar de chat.");
-                  return;
-                }
-                setActiveChat(chat);
-              });
-
-              chatContainer.appendChild(chatItem);
-
-              // Botón para eliminar el chat
-              const deleteButton = document.createElement("button");
-              deleteButton.classList.add("material-symbols-outlined", "delete-button");
-              deleteButton.innerHTML = "delete";
-              chatContainer.appendChild(deleteButton);
-
-              chatList.appendChild(chatContainer);
-            };
+            // Eliminar elementos de la lista que ya no corresponden a ningún chat
+            while (chatList.children.length > chats.length) {
+              chatList.removeChild(chatList.lastChild);
+            }
           }
 
           // Establece un chat como activo y muestra sus mensajes
@@ -349,7 +380,6 @@
 
                 // Mostrar el chat actual
                 setActiveChat(chats[currentChatIndex]);
-                updateChatList();
               } else {
                 console.error('Error al eliminar el chat de la base de datos:', response.status);
               }
@@ -377,7 +407,7 @@
               const responseUsuario = await fetch('/api/mensajes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: currentChatId, emisor: nombreUsuario, contenido: userMessage, estilo: "user-message" })
+                body: JSON.stringify({ chat_id: currentChatId, emisor: nombreUsuario, contenido: userMessage, estilo: "user-message", created_at: chats[currentChatIndex].messages.length })
               });
 
               if (!responseUsuario.ok) {
@@ -396,16 +426,29 @@
               if (response.ok) {
                 const data = await response.json();
 
+                // Construir el historial de la conversación como un string
+                let historialConversacion = "";
+                chats[currentChatIndex].messages.forEach(message => {
+                  historialConversacion += `${message.emisor}: ${message.contenido}\n`;
+                });
+
+                // Resumir el historial
+                const resumenHistorial = await resumirHistorial(historialConversacion);
+
                 // Construir el mensaje para Gemini con la pregunta y los fragmentos
                 let geminiMessage = `Pregunta del usuario: ${userMessage}\n\n`;
+
+                // Agregar el resumen del historial al prompt
+                geminiMessage += `Resumen de la conversación anterior:\n${resumenHistorial}\n\n`;
+
                 if (data.length > 0) {
                   geminiMessage += "Fragmentos relevantes de los documentos:\n";
                   data.forEach(result => {
                     geminiMessage += `- ${result.text} (Fuente: ${result.document_title})\n`;
                   });
-                  geminiMessage += "\n**Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos. Si la información no es relevante para la pregunta o no es suficiente, ignora los fragmentos y utiliza tu propio conocimiento para responder.**"; 
+                  geminiMessage += "\n**Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos y tomando en cuenta el historial de la conversacion. Si tambien conoces informacion relacionada a los fragmentos puedes complementar la respuesta con tu conocimiento. Si la información de los fragmentos no es relevante para la pregunta o no es suficiente, ignora los fragmentos y utiliza tu propio conocimiento para responder.**"; 
                 } else {
-                  geminiMessage += "No se encontraron fragmentos relevantes en los documentos. Responde a la pregunta del usuario utilizando tu propio conocimiento.";
+                  geminiMessage += "No se encontraron fragmentos relevantes en los documentos. Responde a la pregunta del usuario utilizando tu propio conocimiento y tomando en cuenta el historial de la conversacion.";
                 }
 
                 // Imprimir la pregunta en la consola
@@ -435,7 +478,7 @@
                   const responseBot = await fetch('/api/mensajes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chats[currentChatIndex].id, emisor: 'Farmabot', contenido: response.text(), estilo: "bot-message" })
+                    body: JSON.stringify({ chat_id: chats[currentChatIndex].id, emisor: 'Farmabot', contenido: response.text(), estilo: "bot-message", created_at: chats[currentChatIndex].messages.length })
                   });
 
                   if (!responseBot.ok) {
