@@ -82,7 +82,7 @@
         }
       </script>
 
-      <script type="module">
+      <script type="module" defer>
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -100,7 +100,7 @@
           let botIsThinking = false; // Indica si el bot está procesando una respuesta
 
           // --- Inicializar la API de Google Generative AI ---
-          const API_KEY = "AIzaSyCTVGcQtFtC3RaY98zZtth0u2v0AI1NFuo"; // Reemplaza con tu clave de API
+          const API_KEY = "YOUR API KEY"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
 
           // --- Funciones auxiliares ---
@@ -305,6 +305,11 @@
                   if (botIsThinking) {
                     alert("Espera a que Farmabot termine de responder antes de cambiar de chat.");
                     return;
+                    disableChatItems();
+                    disableDeleteButtons();
+                  } else {
+                    enableChatItems();
+                    enableDeleteButtons();
                   }
                   setActiveChat(chat);
                 });
@@ -388,19 +393,24 @@
           // --- Event Listeners ---
 
           // Controlar la visibilidad del menu en diseño responsive
-          document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.querySelector('.sidebar');
-            const sidebarToggle = document.querySelector('.sidebar-toggle .material-symbols-outlined');
-            const sidebarButtons = document.querySelectorAll('.sidebar button'); // Selecciona todos los botones dentro del sidebar
+          const sidebar = document.querySelector('.sidebar');
+          const sidebarToggle = document.querySelector('.sidebar-toggle > .material-symbols-outlined');
+          const sidebarButtons = document.querySelectorAll('.sidebar button'); 
 
-            sidebarToggle.addEventListener('click', () => {
-              sidebar.classList.toggle('expanded');
-            });
+          sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('expanded');
+          });
 
-            sidebarButtons.forEach(button => {
-              button.addEventListener('click', () => {
-                sidebar.classList.remove('expanded'); // Remueve la clase 'expanded' al hacer clic en cualquier botón
-              });
+          // Delegación de eventos para cerrar el sidebar
+          chatList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('chat-item') || event.target.classList.contains('delete-button')) {
+              sidebar.classList.remove('expanded'); 
+            }
+          });
+
+          sidebarButtons.forEach(button => {
+            button.addEventListener('click', () => {
+              sidebar.classList.remove('expanded'); 
             });
           });
 

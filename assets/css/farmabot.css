@@ -345,7 +345,7 @@ body {
   }
 
   /*Sidebar (extendido)*/
-  .sidebar .expanded { /* Mostrar el contenido cuando la barra lateral está expandida */
+  .expanded { /* Mostrar el contenido cuando la barra lateral está expandida */
     width: 100%;
     height: 100%;
     position: fixed;
