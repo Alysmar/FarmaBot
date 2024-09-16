@@ -21,7 +21,10 @@
     <div class="container">
       <!--Barra lateral-->
       <div class="sidebar">
-        <h1>Farmabot</h1>
+        <div class="sidebar-toggle"> 
+          <h1>Farmabot</h1>
+          <span class="material-symbols-outlined">menu</span> 
+        </div>
         <!-- Botón para iniciar un nuevo chat -->
         <div class="new-chat-btn">
           <button class="new-chat">
@@ -46,12 +49,6 @@
       <div class="content">
         <!--Área de lectura del chat-->
         <div id="chat-output">
-          <header class="header">
-            <!--Saludo-->
-            <!--<h2 class="title">Hola</h2>-->
-            <!--<h4 class="subtitle">¿En que puedo ayudarte hoy?</h4>-->
-          </header>
-
           <!--Indicador de carga-->
            <div class="loading-indicator">
               <div class="loading-animation-1"></div>
@@ -267,7 +264,7 @@
 
                 // Obtener los mensajes para cada chat y ordenarlos por la columna 'created_at'
                 for (let chat of data) {
-                  const messagesResponse = await fetch(`/api/mensajes/chat/${chat.id}?orderBy=created_at`);
+                  const messagesResponse = await fetch(`/api/mensajes/chat/${chat.id}?orderBy=created_at&order=asc`);
                   if (messagesResponse.ok) {
                     chat.messages = await messagesResponse.json();
                   } else {
@@ -389,6 +386,23 @@
           }
 
           // --- Event Listeners ---
+
+          // Controlar la visibilidad del menu en diseño responsive
+          document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.querySelector('.sidebar-toggle .material-symbols-outlined');
+            const sidebarButtons = document.querySelectorAll('.sidebar button'); // Selecciona todos los botones dentro del sidebar
+
+            sidebarToggle.addEventListener('click', () => {
+              sidebar.classList.toggle('expanded');
+            });
+
+            sidebarButtons.forEach(button => {
+              button.addEventListener('click', () => {
+                sidebar.classList.remove('expanded'); // Remueve la clase 'expanded' al hacer clic en cualquier botón
+              });
+            });
+          });
 
           // Envía un mensaje al bot
           sendButton.addEventListener("click", async (event) => {

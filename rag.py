@@ -1,12 +1,18 @@
+# Importa las bibliotecas necesarias
 import re
 import chromadb as chroma
 import PyPDF2
+import nltk
 import spacy
 from nltk.tokenize import sent_tokenize
+from nltk.stem import WordNetLemmatizer
 
-#Descomentar este import la primera vez que se ejecute el proyeto. Luego comentar nuevamente
-#import nltk
+
+#Descomentar estos imports la primera vez que se ejecute el proyeto. Luego comentar nuevamente
 #nltk.download('punkt_tab')
+#nltk.download('punkt')
+#nltk.download('wordnet')
+
 
 #Lista de documentos PDF
 documents = [
@@ -149,9 +155,18 @@ def query_collection(query):
     chroma_client = chroma.Client()
     collection = chroma_client.get_or_create_collection(name="docs_farm_collection")
 
+    # Crear una instancia del lematizador
+    lemmatizer = WordNetLemmatizer()
+
+    # Preprocesamiento de la consulta
+    query_tokens = nltk.word_tokenize(query)
+    query_lemmas = [lemmatizer.lemmatize(token) for token in query_tokens]
+    query_processed = " ".join(query_lemmas)
+
+    # Búsqueda con parámetros adicionales
     results = collection.query(
-        query_texts=[query],
-        n_results=3,
+        query_texts=[query_processed],
+        n_results=3,  
     )
 
     if results is None or not results['documents']:  # Verificar si results es None o si 'documents' está vacío

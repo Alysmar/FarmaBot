@@ -336,7 +336,7 @@ def get_mensajes_chat(chat_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=extras.RealDictCursor)
     try:
-        cur.execute("SELECT * FROM mensajes WHERE chat_id = %s", (chat_id,))
+        cur.execute("SELECT * FROM mensajes WHERE chat_id = %s ORDER BY created_at ASC", (chat_id,))
         mensajes = cur.fetchall()
         return jsonify(mensajes)
     except Exception as e:
