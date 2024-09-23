@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session
 from flask_cors import CORS
 
-from rag import process_files, query_collection
+from rag import process_files, query_collection_pdf, query_collection_txt
 
 from psycopg2 import connect, extras
 from cryptography.fernet import Fernet, InvalidToken
@@ -371,23 +371,48 @@ def home():
     return send_file('index_login_register.html')
 
 
-# Ruta para realizar una consulta al sistema RAG (POST /api/query)
-@app.route('/api/query', methods=['POST'])
-def query_api():
+# Ruta para realizar una consulta al sistema RAG para archivos PDF (POST /api/query_txt)
+@app.route('/api/query_pdf', methods=['POST'])
+def query_pdf_api():
     query = request.json['query']
-    results = query_collection(query)
+    results = query_collection_pdf(query)
 
     # Verificar si query_collection devolvió un mensaje de "no resultados"
     if isinstance(results, str):
         return jsonify({"message": results, "results": []}) 
 
-    # Procesar la respuesta de query_collection (solo si hay resultados)
+    # Procesar la respuesta de query_collection_pdf (solo si hay resultados)
     formatted_results = []
     for i in range(len(results["documents"])):
         formatted_results.append({
             "text": results["documents"][i][0],
             "document_title": results["metadatas"][i][0]["document_title"]
         })
+
+    return jsonify(formatted_results)
+
+
+# Ruta para realizar una consulta al sistema RAG para archivos TXT (POST /api/query_txt)
+@app.route('/api/query_txt', methods=['POST'])
+def query_txt_api():
+    query = request.json['query']
+    results = query_collection_txt(query)  # Llama a query_collection_txt
+
+    #print("Resultados de query_collection_txt:", results)  # Imprimir los resultados
+
+    # Verificar si query_collection_txt devolvió un mensaje de "no resultados"
+    if isinstance(results, str):
+        return jsonify({"message": results, "results": []})
+
+    # Procesar la respuesta de query_collection_txt (solo si hay resultados)
+    formatted_results = []
+    for i in range(len(results["documents"])):
+        # Verificar si results["documents"][i] tiene al menos un elemento
+        if results["documents"][i]: 
+            formatted_results.append({
+                "text": results["documents"][i][0],
+                "file_name": results["metadatas"][i][0]["file_name"]  # Usa "file_name" en lugar de "document_title"
+            })
 
     return jsonify(formatted_results)
 

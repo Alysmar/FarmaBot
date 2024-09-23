@@ -143,7 +143,7 @@
           async function resumirHistorial(historial) {
             // Obtener el modelo de lenguaje para la generación de resúmenes
             const model = genAI.getGenerativeModel({
-              model: "gemini-1.5-pro-latest" 
+              model: "gemini-1.5-flash" 
             });
 
             // Construir el prompt para la generación del resumen
@@ -440,15 +440,23 @@
 
               updateChatList();
 
-              // Enviar la consulta al backend para obtener fragmentos relevantes
-              const response = await fetch('/api/query', {
+              // Enviar la consulta al backend para obtener fragmentos de la base de conocimientos (Archivos PDF)
+              const responsePdf = await fetch('/api/query_pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: userMessage })
               });
 
-              if (response.ok) {
-                const data = await response.json();
+              // Enviar la consulta al backend para obtener fragmentos de las paginas webs de las farmacias (Archivos TXT)
+              const responseTxt = await fetch('/api/query_txt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: userMessage })
+              });
+
+              if (responsePdf.ok && responseTxt.ok) {
+                const dataPdf = await responsePdf.json();
+                const dataTxt = await responseTxt.json();
 
                 // Construir el historial de la conversación como un string
                 let historialConversacion = "";
@@ -465,12 +473,28 @@
                 // Agregar el resumen del historial al prompt
                 geminiMessage += `Resumen de la conversación anterior:\n${resumenHistorial}\n\n`;
 
-                if (data.length > 0) {
-                  geminiMessage += "Fragmentos relevantes de los documentos:\n";
-                  data.forEach(result => {
-                    geminiMessage += `- ${result.text} (Fuente: ${result.document_title})\n`;
+                let hayFragmentos = false; // Variable para indicar si hay fragmentos
+
+                if (dataPdf.length > 0) {
+                  hayFragmentos = true;
+                  geminiMessage += "Fragmentos relevantes de la base de conocimientos:\n";
+                  dataPdf.forEach(result => {
+                    geminiMessage += `- ${result.text} (Fuente: ${result.document_title})\n\n`;
                   });
-                  geminiMessage += "\n**Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos y tomando en cuenta el historial de la conversacion. Si tambien conoces informacion relacionada a los fragmentos puedes complementar la respuesta con tu conocimiento. Si la información de los fragmentos no es relevante para la pregunta o no es suficiente, ignora los fragmentos y utiliza tu propio conocimiento para responder.**"; 
+                }
+                
+                if (dataTxt.length > 0) {
+                  hayFragmentos = true;
+                  geminiMessage += "Fragmentos relevantes de las paginas webs de las farmacias:\n";
+                  dataTxt.forEach(result => {
+                    geminiMessage += `- ${result.text} (Fuente: ${result.file_name})\n`;
+                  });
+                }
+
+                if (hayFragmentos) {
+                  geminiMessage += "\n**Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos que se te han proporcionado y tomando en cuenta el historial de la conversacion. Si tambien conoces informacion relacionada a los fragmentos, puedes complementar la respuesta con tu conocimiento. Si la información de los fragmentos no es relevante para la pregunta, ignora los fragmentos y utiliza tu propio conocimiento para responder.**"; 
+                  geminiMessage += "\n**Los fragmentos identificados como base de conocimientos, contienen informacion sobre medicamentos para diferentes patologias.**"; 
+                  geminiMessage += "\n**Los fragmentos identificados como paginas webs de farmacias, contienen informacion sobre el stock y caracteristicas de los medicamentos que se encuentran en farmacias en particular. Estos son recuperados en formato JSON. Si son relevantes para la pregunta del usuario utiliza esta informacion para responder al usuario en lenguaje natural.**"; 
                 } else {
                   geminiMessage += "No se encontraron fragmentos relevantes en los documentos. Responde a la pregunta del usuario utilizando tu propio conocimiento y tomando en cuenta el historial de la conversacion.";
                 }
@@ -529,7 +553,7 @@
                 }
 
               } else {
-                console.error('Error al consultar el backend:', response.status);
+                console.error('Error al consultar el backend:', responsePdf.status, responseTxt.status);
                 displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
               }
 
