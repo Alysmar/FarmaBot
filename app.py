@@ -9,6 +9,10 @@ from cryptography.fernet import Fernet, InvalidToken
 import os
 import secrets
 
+#DESCOMENTAR LA SIGUIENTE LINEA CUANDO SE DESEE ACTUALIZAR EL ARCHIVO farmatodo.txt
+#Ejecuta el archivo farmatodo.py antes de levantar el servidor 
+#os.system("python farmatodo.py")
+
 
 # Crea una instancia de la aplicación Flask
 app = Flask(__name__, static_url_path='/assets', static_folder='assets')
@@ -33,7 +37,7 @@ host = 'localhost'
 port = 5432
 dbname = 'postgres'
 user = 'postgres'
-password = '1234'
+password = 'postgres'
 
 
 # Configuración de la clave de encriptación

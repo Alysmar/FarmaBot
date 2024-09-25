@@ -15,6 +15,7 @@
     />
     <!-- Vinculando con la hoja de estilos CSS -->
     <link rel="stylesheet" type="text/css" href="/assets/css/farmabot.css"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/images/bot2.png" />
   </head>
 
   <body>
@@ -22,7 +23,7 @@
       <!--Barra lateral-->
       <div class="sidebar">
         <div class="sidebar-toggle"> 
-          <h1>Farmabot</h1>
+          <h1>FarmaBot</h1>
           <span class="material-symbols-outlined">menu</span> 
         </div>
         <!-- Botón para iniciar un nuevo chat -->
@@ -100,7 +101,7 @@
           let botIsThinking = false; // Indica si el bot está procesando una respuesta
 
           // --- Inicializar la API de Google Generative AI ---
-          const API_KEY = "YOUR API KEY"; // Reemplaza con tu clave de API
+          const API_KEY = "AIzaSyBm6EYdWmzkRBERlDbErrhFw6yqljly-5o"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
 
           // --- Funciones auxiliares ---
@@ -467,44 +468,59 @@
                 // Resumir el historial
                 const resumenHistorial = await resumirHistorial(historialConversacion);
 
-                // Construir el mensaje para Gemini con la pregunta y los fragmentos
-                let geminiMessage = `Pregunta del usuario: ${userMessage}\n\n`;
+                // Construir el mensaje para Gemini con la pregunta y los fragmentos (prompt del modelo)
+                let geminiMessage = `
+                  Rol: Eres FarmaBot, un agente conversacional de inteligencia artificial que emula a un profesional farmacéutico y médico internista experimentado. Tu principal objetivo es brindar información confiable y actualizada sobre medicamentos y avances en medicina interna a médicos internistas. Actúas como un colega amable y un recurso confiable. Entiendes la importancia de la precisión en el campo de la salud y te tomas tu trabajo con seriedad, ya que la información inexacta puede tener graves consecuencias para los pacientes. 
 
-                // Agregar el resumen del historial al prompt
-                geminiMessage += `Resumen de la conversación anterior:\n${resumenHistorial}\n\n`;
+                  Tarea: 
+                  *Tu tarea principal es proporcionar información precisa y amigable sobre patologías que tratan los médicos internistas y los medicamentos disponibles en farmatodo Puerto Ordaz. Debes: 
+                  *Presentar la información de manera organizada y completa para que los médicos internistas puedan tomar decisiones informadas. 
+                  *Explicar qué medicamentos son efectivos para las patologías consultadas y viceversa. 
+                  *Responder con profesionalismo y exactitud sobre los avances en medicina interna. 
+                  *Brindar información sobre la disponibilidad y precios de los medicamentos en farmatodo Puerto Ordaz.
+                  *Siempre responder profesionalmente, considerando que tu respuesta puede influir en la decisión del cliente de acceder a los servicios de FarmaBot. Tu trabajo es clave para este objetivo. 
 
-                let hayFragmentos = false; // Variable para indicar si hay fragmentos
+                  Detalles: 
+                  *Debes mantener una conversación fluida y natural.
+                  *La información que brindes debe estar respaldada por expertos y ser comprobable. 
+                  *Utilizarás una base de conocimiento que contiene información sobre medicamentos y medicina. 
+                  *Los fragmentos identificados como conocimientos de medicina, contienen información sobre medicamentos para diferentes patologías y sistemas.
+                  *Los fragmentos identificados como medicamentos de farmatodo, contienen información sobre el stock, precios y características de los medicamentos que se encuentran en diferentes sedes de farmatodo Puerto Ordaz. Estos son recuperados en formato JSON. Cuando generes una respuesta a patir de estos debes informar al medico en lenguaje natural TODOS los aspectos que recupera el fragmento.
+                  *Siempre prioriza la informacion recuperada tanto de los conocimientos de medicina como de los medicamentos de farmatodo para responder. Si conoces informacion adicional al respecto puedes proporcionarla al medico siempre y cuando sea informacion verificada y comprobable.
+                  *Incluye información sobre la dosis, los efectos secundarios y las interacciones con otros medicamentos.
+                  *Si la informacion de la base de conocimientos no es relevante para la pregunta, o no se encuentran fragmentos al respecto, puedes responder de tu propio conocimiento siempre y cuando sea informacion verificada y comprobable.
+                  *Los médicos podrán con tu ayuda, informar a sus pacientes sobre la disponibilidad de medicamentos y en qué sede de farmatodo encontrarlos. 
+                  *Si el usuario pregunta sobre un medicamento que no conoces y no hay informacion al respecto en la base de conocimientos, responde que no tienes información sobre ese medicamento específico, pero que puedes proporcionar información general sobre la condición o los síntomas que el usuario está tratando.
 
-                if (dataPdf.length > 0) {
-                  hayFragmentos = true;
-                  geminiMessage += "Fragmentos relevantes de la base de conocimientos:\n";
-                  dataPdf.forEach(result => {
-                    geminiMessage += `- ${result.text} (Fuente: ${result.document_title})\n\n`;
-                  });
-                }
-                
-                if (dataTxt.length > 0) {
-                  hayFragmentos = true;
-                  geminiMessage += "Fragmentos relevantes de las paginas webs de las farmacias:\n";
-                  dataTxt.forEach(result => {
-                    geminiMessage += `- ${result.text} (Fuente: ${result.file_name})\n`;
-                  });
-                }
+                  Contexto: 
+                  Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos que se te han proporcionado y tomando en cuenta el historial de la conversacion. 
+                  Resumen del historial de la conversación anterior: \n${resumenHistorial}
 
-                if (hayFragmentos) {
-                  geminiMessage += "\n**Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos que se te han proporcionado y tomando en cuenta el historial de la conversacion. Si tambien conoces informacion relacionada a los fragmentos, puedes complementar la respuesta con tu conocimiento. Si la información de los fragmentos no es relevante para la pregunta, ignora los fragmentos y utiliza tu propio conocimiento para responder.**"; 
-                  geminiMessage += "\n**Los fragmentos identificados como base de conocimientos, contienen informacion sobre medicamentos para diferentes patologias.**"; 
-                  geminiMessage += "\n**Los fragmentos identificados como paginas webs de farmacias, contienen informacion sobre el stock y caracteristicas de los medicamentos que se encuentran en farmacias en particular. Estos son recuperados en formato JSON. Si son relevantes para la pregunta del usuario utiliza esta informacion para responder al usuario en lenguaje natural.**"; 
-                } else {
-                  geminiMessage += "No se encontraron fragmentos relevantes en los documentos. Responde a la pregunta del usuario utilizando tu propio conocimiento y tomando en cuenta el historial de la conversacion.";
-                }
+                  Pregunta del usuario: ${userMessage}
+
+                  Fragmentos relevantes:
+                  Conocimientos de medicina: ${dataPdf.length > 0 ? dataPdf.map(result => `- ${result.text} (Fuente: ${result.document_title}\n)`).join('\n') : "No se encontraron fragmentos relevantes en los conocimientos de medicina."}
+                  Medicamentos de farmatodo: ${dataTxt.length > 0 ? dataTxt.map(result => `- ${result.text} (Fuente: ${result.file_name}\n)`).join('\n') : "No se encontraron fragmentos relevantes en los medicamentos de farmatodo."}
+
+                  Notas:
+                  *Los precios de los medicamentos estan en bolivares, se coloca como Bs luego del precio. 
+                  *Recuerda siempre responder en español latino, sin importar el idioma de la pregunta. 
+                  *Cada vez que digas el nombre del medico coloca doctor o doctora antes del nombre segun corresponda.
+                  *Asegúrate de que tus respuestas sean precisas, concisas y fáciles de entender para los médicos internistas. 
+                  *Si una pregunta está fuera de tu ámbito de conocimiento (farmacología y medicina interna), puedes brindar la informacion pertinente si esta dentro de tu propio conocimiento. 
+                  Puedes utilizar frases como: 
+                  *"Según la información disponible en mi base de datos..." 
+                  *"De acuerdo con los últimos estudios..." 
+                  *"Puedo confirmar que farmatodo tiene el medicamento Y disponible..." 
+                  *"No tengo información suficiente para responder a esa pregunta, pero puedo intentar buscar más información si lo deseas." 
+                `;
 
                 // Imprimir la pregunta en la consola
                 console.log("Pregunta enviada a Gemini:", geminiMessage); 
 
                 // Obtener el modelo de lenguaje
                 const model = genAI.getGenerativeModel({
-                  model: "gemini-1.5-pro-latest"
+                  model: "gemini-1.5-flash"
                 });
 
                 try {
@@ -559,6 +575,17 @@
 
             } catch (error) {
               console.error("Error:", error);
+
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems();
+              enableDeleteButtons();
+            } finally {
+              // Este bloque se ejecuta siempre, haya o no un error
+              newChatButton.disabled = false;
+              botIsThinking = false;
+              enableChatItems();
+              enableDeleteButtons();
             }
           });
 

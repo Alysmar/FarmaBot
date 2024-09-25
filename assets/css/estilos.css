@@ -129,6 +129,40 @@ main{
     display: none;
 }
 
+.contenedor__login-register form::before { 
+    content: ""; 
+    background-image: url(../images/bot2.png); 
+    background-size: contain; /* Ajusta la imagen al contenedor */ 
+    background-repeat: no-repeat; 
+    width:  130px; /* Ajusta el ancho del logo */ 
+    height: 130px; /* Ajusta la altura del logo */ 
+    position: absolute; 
+    top: 10px; /* Ajusta la distancia desde arriba */ 
+    left: 10px; /* Ajusta la distancia desde la izquierda */ 
+    border-top-right-radius: 100px; /* Redondea la esquina superior derecha */ 
+    border-bottom-right-radius: 80px; /* Redondea la esquina inferior derecha */ 
+    overflow: hidden; /* Recorta la imagen que sobresale */ 
+}
+
+.contenedor__login-register form h2{ 
+    font-size: 30px; 
+    text-align: right; 
+    margin-bottom: 20px; 
+    color: #46A2FD; 
+}
+
+.contenedor__login-register{ 
+    display: flex; 
+    align-items: center; 
+    width: 100%; 
+    max-width: 380px; 
+    position: relative; 
+    top: -185px; 
+    left: 10px; 
+ 
+    transition: left 500ms cubic-bezier(0.175, 0.885, 0.320, 1.275); 
+}
+
 /*Trabajando en el Responsive Desing*/
 
 @media screen and (max-width: 850px){
