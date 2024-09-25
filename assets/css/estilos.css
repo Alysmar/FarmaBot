@@ -140,7 +140,7 @@ main{
     top: 10px; /* Ajusta la distancia desde arriba */ 
     left: 10px; /* Ajusta la distancia desde la izquierda */ 
     border-top-right-radius: 100px; /* Redondea la esquina superior derecha */ 
-    border-bottom-right-radius: 80px; /* Redondea la esquina inferior derecha */ 
+    border-bottom-right-radius: 90px; /* Redondea la esquina inferior derecha */ 
     overflow: hidden; /* Recorta la imagen que sobresale */ 
 }
 

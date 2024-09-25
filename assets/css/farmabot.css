@@ -180,6 +180,12 @@ body {
   unicode-bidi: isolate;
 }
 
+/*Deshabilitar botones*/
+.disabled-button {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /*Animacion de carga*/
 .loading-indicator {
   display: flex;
@@ -353,7 +359,7 @@ body {
     left: 0;
     z-index: 1000;
     transition: height 0.3s ease-in-out;
-    background-color: black;
+    background: rgba(0, 128, 255, 0.9);
   }
 
   /*Contenedor de chat*/

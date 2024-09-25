@@ -101,7 +101,7 @@
           let botIsThinking = false; // Indica si el bot está procesando una respuesta
 
           // --- Inicializar la API de Google Generative AI ---
-          const API_KEY = "AIzaSyBm6EYdWmzkRBERlDbErrhFw6yqljly-5o"; // Reemplaza con tu clave de API
+          const API_KEY = "YOUR API KEY"; // Reemplaza con tu clave de API
           const genAI = new GoogleGenerativeAI(API_KEY);
 
           // --- Funciones auxiliares ---
@@ -171,24 +171,38 @@
             chatOutput.scrollTop = chatOutput.scrollHeight;
           }
 
-          // Deshabilita los botones de chat
-          function disableChatItems() {
-            document.querySelectorAll(".chat-item").forEach(item => item.disabled = true);
+          // Deshabilita todos los botones de chat
+          function disableAllButtons() {
+            // Deshabilitar "Nuevo chat"
+            newChatButton.classList.add("disabled-button");
+            newChatButton.disabled = true;
+
+            // Deshabilitar "Cerrar sesión"
+            document.querySelector(".logout-btn button").classList.add("disabled-button");
+            document.querySelector(".logout-btn button").disabled = true;
+
+            // Deshabilitar botones de chat y eliminar
+            document.querySelectorAll(".chat-item, .delete-button").forEach(button => {
+              button.classList.add("disabled-button");
+              button.disabled = true;
+            });
           }
 
-          // Habilita los botones de chat
-          function enableChatItems() {
-            document.querySelectorAll(".chat-item").forEach(item => item.disabled = false);
-          }
+          // Habilita todos los botones de chat
+          function enableAllButtons() {
+            // Habilitar "Nuevo chat"
+            newChatButton.classList.remove("disabled-button");
+            newChatButton.disabled = false;
 
-          // Deshabilita los botones de eliminar chat
-          function disableDeleteButtons() {
-            document.querySelectorAll(".delete-button").forEach(button => button.disabled = true);
-          }
+            // Habilitar "Cerrar sesión"
+            document.querySelector(".logout-btn button").classList.remove("disabled-button");
+            document.querySelector(".logout-btn button").disabled = false;
 
-          // Habilita los botones de eliminar chat
-          function enableDeleteButtons() {
-            document.querySelectorAll(".delete-button").forEach(button => button.disabled = false);
+            // Habilitar botones de chat y eliminar
+            document.querySelectorAll(".chat-item, .delete-button").forEach(button => {
+              button.classList.remove("disabled-button");
+              button.disabled = false;
+            });
           }
 
           // --- Funciones principales ---
@@ -306,11 +320,9 @@
                   if (botIsThinking) {
                     alert("Espera a que Farmabot termine de responder antes de cambiar de chat.");
                     return;
-                    disableChatItems();
-                    disableDeleteButtons();
+                    disableAllButtons();
                   } else {
-                    enableChatItems();
-                    enableDeleteButtons();
+                    enableAllButtons();
                   }
                   setActiveChat(chat);
                 });
@@ -343,6 +355,12 @@
           function setActiveChat(chat) {
             chatOutput.innerHTML = '';
             currentChatIndex = chats.indexOf(chat);
+
+            if (botIsThinking) {
+              disableAllButtons(); 
+            } else {
+              enableAllButtons();
+            }
 
             // Mostrar los mensajes del chat activo
             chat.messages.forEach(message => {
@@ -494,7 +512,7 @@
 
                   Contexto: 
                   Responde a la pregunta del usuario utilizando la información proporcionada en los fragmentos que se te han proporcionado y tomando en cuenta el historial de la conversacion. 
-                  Resumen del historial de la conversación anterior: \n${resumenHistorial}
+                  Resumen del historial de la conversación anterior: ${resumenHistorial}
 
                   Pregunta del usuario: ${userMessage}
 
@@ -525,10 +543,9 @@
 
                 try {
                   // Deshabilitar botones mientras el bot está pensando
-                  newChatButton.disabled = true;
+                  disableAllButtons();
+                  userInput.disabled = true;
                   botIsThinking = true;
-                  disableChatItems();
-                  disableDeleteButtons();
 
                   // Generar la respuesta de Gemini con el mensaje construido
                   const result = await model.generateContent(geminiMessage);
@@ -550,10 +567,9 @@
                   }
 
                   // Habilitar botones después de que el bot responde
-                  newChatButton.disabled = false;
+                  enableAllButtons();
+                  userInput.disabled = false; 
                   botIsThinking = false;
-                  enableChatItems();
-                  enableDeleteButtons();
 
                   // Actualizar la vista del chat
                   setActiveChat(chats[currentChatIndex]);
@@ -562,10 +578,9 @@
                   displayMessage("Farmabot", "Error al procesar tu solicitud.", "bot-message");
 
                   // Habilitar botones en caso de error
-                  newChatButton.disabled = false;
+                  enableAllButtons();
+                  userInput.disabled = false; 
                   botIsThinking = false;
-                  enableChatItems();
-                  enableDeleteButtons();
                 }
 
               } else {
@@ -576,16 +591,14 @@
             } catch (error) {
               console.error("Error:", error);
 
-              newChatButton.disabled = false;
+              enableAllButtons();
+              userInput.disabled = false; 
               botIsThinking = false;
-              enableChatItems();
-              enableDeleteButtons();
             } finally {
               // Este bloque se ejecuta siempre, haya o no un error
-              newChatButton.disabled = false;
+              enableAllButtons();
+              userInput.disabled = false; 
               botIsThinking = false;
-              enableChatItems();
-              enableDeleteButtons();
             }
           });
 
