@@ -17,10 +17,17 @@ from nltk.stem import WordNetLemmatizer
 
 #Lista de documentos PDF y TXT
 documents = [
-    #"documentos/Leflunomida.pdf",
-    #"documentos/Inyección_de_insulina_glargina.pdf",
-    "documentos/Nevirapina.pdf",
-    #"documentos/Repaglinida.pdf",
+    "documentos/Enfermedades-Del-Sistema-Cardiovascular-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Respiratorio-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Digestivo-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Endocrino-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Renal-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Hematológico-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Musculoesquelético-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Nervioso-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Del-Sistema-Inmunitario-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Infecciosas-Y-Sus-Tratamientos.pdf",
+    "documentos/Enfermedades-Mentales-Y-Sus-Tratamientos.pdf",
     "farmatodo.txt",
 ]
 
